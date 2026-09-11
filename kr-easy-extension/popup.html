@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>KR Easy Extension</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="kr-popup-body">
+  <main class="kr-popup">
+    <header class="kr-popup-header"><span class="kr-logo">KR</span><div><strong>KR Easy Extension</strong><small>Assistente de vendas</small></div></header>
+    <section id="popupLicense" class="kr-popup-section">
+      <span class="kr-status-dot"></span><b id="popupStatus">Verificando licença…</b>
+      <p id="popupMessage">Aguarde enquanto confirmamos seu acesso.</p>
+      <form id="popupLicenseForm" hidden>
+        <label for="popupLicenseKey">Chave de licença</label>
+        <input id="popupLicenseKey" type="text" autocomplete="off" spellcheck="false" maxlength="80" placeholder="Digite sua chave" required>
+        <button class="kr-primary" type="submit">Ativar acesso</button>
+      </form>
+    </section>
+    <button id="openWhatsApp" class="kr-primary" type="button">Abrir WhatsApp Web</button>
+    <button id="removeLicense" class="kr-ghost" type="button" hidden>Remover licença deste navegador</button>
+    <p class="kr-popup-foot">Abra o WhatsApp Web para usar o painel lateral.</p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
