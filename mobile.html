@@ -64,6 +64,7 @@
       const $ = (selector, context = document) => context.querySelector(selector);
       const $$ = (selector, context = document) => [...context.querySelectorAll(selector)];
       const normalizeKey = value => value.trim().toUpperCase().replace(/\s+/g, '');
+      const IS_PLAY_APP = new URLSearchParams(location.search).get('source') === 'play';
       const escapeHtml = value => String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
       let toastTimer;
       let installPrompt = null;
@@ -186,6 +187,11 @@
 
       if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
+      if (IS_PLAY_APP) {
+        $('#installCard').classList.add('hidden');
+        const desktopLink = document.querySelector('a[href="/acesso.html"]');
+        if (desktopLink) desktopLink.closest('article').classList.add('hidden');
+      }
       renderScripts();
       bootLicense();
     })();
