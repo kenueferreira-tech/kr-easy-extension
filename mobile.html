@@ -7,7 +7,10 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KR Easy">
   <meta name="description" content="KR Easy Extension Mobile — assistente de vendas e gerador de scripts para WhatsApp.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <title>KR Easy Extension Mobile</title>
   <style>
     :root{--bg:#050b08;--surface:#0b1710;--surface-2:#112119;--surface-3:#162a20;--line:#203c2c;--text:#f1fff6;--muted:#9ab5a4;--green:#25d366;--neon:#69ff9f;--dark:#04190b;--danger:#ff9090;--warning:#ffd66b;--radius:20px;--nav-h:78px;--header-h:72px;--shadow:0 22px 70px rgba(0,0,0,.38)}
@@ -26,7 +29,7 @@
 
       <section class="screen" data-screen="scripts"><div class="section-head"><span class="eyebrow">Sua biblioteca</span><h1>Meus scripts</h1><p class="lead">Guarde as mensagens que mais combinam com seu jeito de vender.</p></div><form class="card" id="scriptForm"><input id="scriptId" type="hidden"><label class="field"><span>Título</span><input id="scriptTitle" maxlength="80" placeholder="Ex.: Cliente sem tempo" required></label><label class="field"><span>Mensagem</span><textarea id="scriptText" maxlength="2000" placeholder="Escreva sua mensagem" required></textarea></label><button class="primary" type="submit">Salvar script</button><button class="secondary hidden" id="cancelEdit" type="button">Cancelar edição</button></form><div class="list" id="scriptsList"></div></section>
 
-      <section class="screen" data-screen="profile"><div class="section-head"><span class="eyebrow">Minha conta</span><h1>Licença e acesso</h1><p class="lead">Gerencie a chave vinculada a este aparelho.</p></div><article class="card license-card"><div class="license-icon">🔐</div><h3 id="profileLicenseTitle">Licença ativa</h3><p class="subtle" id="profileLicenseText">Sua chave está validada neste dispositivo.</p><div class="license-info">Chave: <b id="maskedLicense">•••• •••• ••••</b><br>Última validação: <b id="lastValidation">Agora</b></div><button class="danger-button" id="removeLicense" type="button">Remover licença deste aparelho</button></article><article class="card" style="margin-top:14px"><h3>Uso responsável</h3><p class="subtle">Revise sempre o conteúdo antes de enviar. A ferramenta prepara a mensagem, mas você mantém o controle da conversa.</p></article></section>
+      <section class="screen" data-screen="profile"><div class="section-head"><span class="eyebrow">Minha conta</span><h1>Licença e acesso</h1><p class="lead">Gerencie a chave vinculada a este aparelho.</p></div><article class="card license-card"><div class="license-icon">🔐</div><h3 id="profileLicenseTitle">Licença ativa</h3><p class="subtle" id="profileLicenseText">Sua chave está validada neste dispositivo.</p><div class="license-info">Chave: <b id="maskedLicense">•••• •••• ••••</b><br>Última validação: <b id="lastValidation">Agora</b></div><button class="danger-button" id="removeLicense" type="button">Remover licença deste aparelho</button></article><article class="card" style="margin-top:14px" id="installCard"><h3>Instalar no celular</h3><p class="subtle">Adicione a KR Easy à tela inicial para abrir como um aplicativo.</p><button class="primary" id="installApp" type="button">Instalar aplicativo</button></article><article class="card" style="margin-top:14px"><h3>Usar também no computador</h3><p class="subtle">Instale a extensão para acompanhar seus atendimentos no WhatsApp Web.</p><a class="secondary" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="/acesso.html">Ver versão para computador</a></article><article class="card" style="margin-top:14px"><h3>Uso responsável</h3><p class="subtle">Revise sempre o conteúdo antes de enviar. A ferramenta prepara a mensagem, mas você mantém o controle da conversa.</p></article></section>
     </main>
 
     <nav class="bottom-nav" aria-label="Navegação principal"><button class="nav-button active" data-nav="home"><span class="nav-icon">⌂</span>Início</button><button class="nav-button" data-nav="generator"><span class="nav-icon">✦</span>Gerador</button><button class="nav-button" data-nav="scripts"><span class="nav-icon">▤</span>Scripts</button><button class="nav-button" data-nav="profile"><span class="nav-icon">●</span>Licença</button></nav>
@@ -63,6 +66,7 @@
       const normalizeKey = value => value.trim().toUpperCase().replace(/\s+/g, '');
       const escapeHtml = value => String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
       let toastTimer;
+      let installPrompt = null;
 
       function readJSON(key, fallback) { try { const value = JSON.parse(localStorage.getItem(key)); return value ?? fallback; } catch { return fallback; } }
       function writeJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
@@ -171,6 +175,16 @@
       $('#modalCopy').addEventListener('click', () => copyText($('#modalMessage').value));
       $('#closeModal').addEventListener('click', closeMessage);
       $('#messageModal').addEventListener('click', event => { if (event.target === $('#messageModal')) closeMessage(); });
+
+      window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
+      window.addEventListener('appinstalled', () => { installPrompt = null; $('#installCard').classList.add('hidden'); notify('Aplicativo instalado com sucesso.'); });
+      $('#installApp').addEventListener('click', async () => {
+        if (installPrompt) { installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; return; }
+        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        notify(isIos ? 'No Safari, toque em Compartilhar e depois em “Adicionar à Tela de Início”.' : 'Abra o menu do navegador e toque em “Instalar aplicativo” ou “Adicionar à tela inicial”.');
+      });
+
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
       renderScripts();
       bootLicense();

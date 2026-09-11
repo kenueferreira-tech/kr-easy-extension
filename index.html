@@ -28,7 +28,7 @@
         <span class="eyebrow">Seu assistente de vendas no WhatsApp</span>
         <h1>Aumente suas vendas no WhatsApp respondendo objeções em segundos com a <span class="gradient">KR Easy Extension</span></h1>
         <p class="hero-copy">Tenha respostas estratégicas, scripts prontos e mensagens persuasivas no computador e no celular — sem travar na hora de atender seu cliente.</p>
-        <div class="hero-actions"><a class="btn btn-primary" href="#oferta">Garantir acesso vitalício <span aria-hidden="true">→</span></a><a class="btn btn-secondary" href="#recursos">Ver como funciona</a></div>
+        <div class="hero-actions"><a class="btn btn-primary" href="#oferta">Garantir acesso vitalício <span aria-hidden="true">→</span></a><a class="btn btn-secondary" id="platformCta" href="/acesso.html">Já tenho uma licença</a><a class="btn btn-secondary" href="#recursos">Ver como funciona</a></div>
         <p class="microcopy">Pagamento único via Pix • Acesso ao painel e ao app mobile</p>
         <div class="product-shell" aria-label="Prévia da KR Easy Extension">
           <div class="browser"><div class="browser-top"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span class="address"></span></div><div class="demo">
@@ -76,8 +76,11 @@
       const $ = (selector, context = document) => context.querySelector(selector);
       const $$ = (selector, context = document) => [...context.querySelectorAll(selector)];
       const toast = $('#toast');
+      const isMobileDevice = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
       let toastTimer;
       let lastFocusedElement = null;
+
+      $('#platformCta').textContent = isMobileDevice ? 'Abrir aplicativo no celular' : 'Instalar extensão no computador';
 
       function notify(message) {
         toast.textContent = message;
