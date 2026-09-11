@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.kenueferreira.kreasyextension",
+      "sha256_cert_fingerprints": [
+        "4D:7D:C4:6B:76:83:BE:1E:BE:F9:32:C2:A9:D5:EA:C7:CB:DE:2A:71:58:97:47:D6:F2:10:30:6C:DF:69:C1:D5"
+      ]
+    }
+  }
+]
