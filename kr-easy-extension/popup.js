@@ -3,6 +3,8 @@
 
   const FIREBASE_DATABASE_URL = 'https://kr-easy-extension-default-rtdb.firebaseio.com';
   const STORAGE_KEY = 'krEasyLicense';
+  const DEVICE_KEY = 'krEasyDeviceId';
+  const DEVICE_API = 'https://kr-easy-extension.vercel.app/api/devices';
   const form = document.getElementById('popupLicenseForm');
   const keyInput = document.getElementById('popupLicenseKey');
   const status = document.getElementById('popupStatus');
@@ -18,6 +20,21 @@
     const bytes = new TextEncoder().encode(value);
     const digest = await crypto.subtle.digest('SHA-256', bytes);
     return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function deviceId() {
+    const stored = await getStored([DEVICE_KEY]);
+    if (stored[DEVICE_KEY]) return stored[DEVICE_KEY];
+    const value = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/[^a-zA-Z0-9_-]/g, '');
+    await setStored({ [DEVICE_KEY]: value }); return value;
+  }
+
+  async function deviceAction(action, key) {
+    const id = await deviceId();
+    const response = await fetch(DEVICE_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, key, deviceId: id, type: 'computer', name: `Chrome — ${navigator.platform || 'Computador'}` }) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Não foi possível vincular este computador.');
+    return data;
   }
 
   async function validateLicense(licenseKey) {
@@ -56,6 +73,9 @@
     try {
       const result = await validateLicense(saved.key);
       if (result.ok) {
+        const devices = await deviceAction('list', saved.key);
+        const id = await deviceId();
+        if (!devices.devices.some(device => device.id === id)) throw new Error('Este computador foi desvinculado. Ative a licença novamente.');
         await setStored({ [STORAGE_KEY]: { key: saved.key, validatedAt: Date.now() } });
         renderActive(saved.key);
       } else renderLocked(result.message);
@@ -75,6 +95,7 @@
     try {
       const result = await validateLicense(key);
       if (!result.ok) return renderLocked(result.message);
+      await deviceAction('register', key);
       await setStored({ [STORAGE_KEY]: { key, validatedAt: Date.now() } });
       renderActive(key);
     } catch (error) {
@@ -85,6 +106,8 @@
   });
 
   removeButton.addEventListener('click', async () => {
+    const data = await getStored([STORAGE_KEY]);
+    if (data[STORAGE_KEY]?.key) await deviceAction('remove', data[STORAGE_KEY].key).catch(() => {});
     await removeStored([STORAGE_KEY]);
     keyInput.value = '';
     renderLocked('A licença foi removida deste navegador.');

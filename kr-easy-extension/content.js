@@ -3,6 +3,8 @@
 
   const FIREBASE_DATABASE_URL = 'https://kr-easy-extension-default-rtdb.firebaseio.com';
   const LICENSE_STORAGE_KEY = 'krEasyLicense';
+  const DEVICE_STORAGE_KEY = 'krEasyDeviceId';
+  const DEVICE_API = 'https://kr-easy-extension.vercel.app/api/devices';
   const SCRIPTS_STORAGE_KEY = 'krEasyCustomScripts';
   const LICENSE_CACHE_MS = 86400000;
   const QUICK_SCRIPTS = {
@@ -65,13 +67,16 @@
     return { ok: true };
   }
 
+  async function deviceId() { const data = await getStorage([DEVICE_STORAGE_KEY]); if (data[DEVICE_STORAGE_KEY]) return data[DEVICE_STORAGE_KEY]; const value = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/[^a-zA-Z0-9_-]/g, ''); await setStorage({ [DEVICE_STORAGE_KEY]: value }); return value; }
+  async function devices(action, key) { const id = await deviceId(); const response = await fetch(DEVICE_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, key, deviceId: id, type: 'computer', name: `Chrome — ${navigator.platform || 'Computador'}` }) }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || 'Não foi possível validar este computador.'); return { data, id }; }
+
   async function checkAccess() {
     const data = await getStorage([LICENSE_STORAGE_KEY]);
     const saved = data[LICENSE_STORAGE_KEY];
     if (!saved || !saved.key) return showLocked('');
     try {
       const result = await validateLicense(saved.key);
-      if (result.ok) { await setStorage({ [LICENSE_STORAGE_KEY]: { key: saved.key, validatedAt: Date.now() } }); return showApp(); }
+      if (result.ok) { const linked = await devices('list', saved.key); if (!linked.data.devices.some(device => device.id === linked.id)) throw new Error('Este computador foi desvinculado. Ative a licença novamente.'); await setStorage({ [LICENSE_STORAGE_KEY]: { key: saved.key, validatedAt: Date.now() } }); return showApp(); }
       showLocked(result.message);
     } catch (error) {
       if (saved.validatedAt && Date.now() - saved.validatedAt < LICENSE_CACHE_MS) showApp();
@@ -106,7 +111,7 @@
       event.preventDefault(); const button = event.currentTarget.querySelector('button'); const error = document.getElementById('krLicenseError');
       const key = normalizeKey(document.getElementById('krLicenseInput').value); if (key.length < 8) return error.textContent = 'Confira a chave informada.';
       button.disabled = true; button.textContent = 'Validando…'; error.textContent = '';
-      try { const result = await validateLicense(key); if (!result.ok) return error.textContent = result.message; await setStorage({ [LICENSE_STORAGE_KEY]: { key, validatedAt: Date.now() } }); showApp(); }
+      try { const result = await validateLicense(key); if (!result.ok) return error.textContent = result.message; await devices('register', key); await setStorage({ [LICENSE_STORAGE_KEY]: { key, validatedAt: Date.now() } }); showApp(); }
       catch (reason) { error.textContent = reason.message; }
       finally { button.disabled = false; button.textContent = 'Validar licença'; }
     });

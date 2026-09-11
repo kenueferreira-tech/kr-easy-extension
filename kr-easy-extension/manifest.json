@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "KR Easy Extension",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Assistente de vendas e gerador de scripts para WhatsApp Web.",
   "permissions": ["storage", "clipboardWrite"],
   "host_permissions": [
     "https://web.whatsapp.com/*",
     "https://*.firebaseio.com/*",
-    "https://*.firebasedatabase.app/*"
+    "https://*.firebasedatabase.app/*",
+    "https://kr-easy-extension.vercel.app/*"
   ],
   "action": {
     "default_title": "KR Easy Extension",

@@ -40,7 +40,7 @@ async function confirmPayment(data) {
   const licenseHash = crypto.createHash('sha256').update(license).digest('hex');
   const database = getDatabase();
   await database.ref(`licenses/${licenseHash}`).set({
-    status: 'ativa', plan: 'vitalicio', createdAt: new Date().toISOString(),
+    status: 'ativa', plan: 'basico', access: 'vitalicio', deviceLimit: 2, createdAt: new Date().toISOString(),
     orderNsu: data.order_nsu, transactionNsu: data.transaction_nsu,
     captureMethod: check.capture_method || data.capture_method || 'unknown'
   });

@@ -40,6 +40,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>
 
+  <script src="/device-manager.js"></script>
   <script>
     (() => {
       'use strict';
@@ -99,6 +100,9 @@
         $('#licenseStatusText').textContent = 'Ativa';
         $('#maskedLicense').textContent = maskKey(saved.key);
         $('#lastValidation').textContent = saved.validatedAt ? formatDate(saved.validatedAt) : 'Agora';
+        let devices = $('#deviceList');
+        if (!devices) { devices = document.createElement('article'); devices.id = 'deviceList'; devices.className = 'card'; devices.style.marginTop = '14px'; document.querySelector('[data-screen="profile"]').appendChild(devices); }
+        KRDevices.render(devices, saved.key);
       }
 
       function lock(message = '') {
@@ -113,7 +117,7 @@
         if (!saved || !saved.key) return lock();
         try {
           const result = await validateLicense(saved.key);
-          if (result.ok) { const updated = { key: saved.key, validatedAt: Date.now() }; writeJSON(LICENSE_STORAGE_KEY, updated); return unlock(updated); }
+          if (result.ok) { await KRDevices.ensure(saved.key); const updated = { key: saved.key, validatedAt: Date.now() }; writeJSON(LICENSE_STORAGE_KEY, updated); return unlock(updated); }
           lock(result.message);
         } catch (error) {
           if (saved.validatedAt && Date.now() - saved.validatedAt < LICENSE_CACHE_MS) unlock(saved);
@@ -163,7 +167,7 @@
         event.preventDefault(); const button = event.currentTarget.querySelector('button'); const key = normalizeKey($('#licenseKey').value);
         if (key.length < 8) return $('#licenseError').textContent = 'Confira a chave informada e tente novamente.';
         button.disabled = true; button.textContent = 'Validando…'; $('#licenseError').textContent = '';
-        try { const result = await validateLicense(key); if (!result.ok) return $('#licenseError').textContent = result.message; const saved = { key, validatedAt: Date.now() }; writeJSON(LICENSE_STORAGE_KEY, saved); unlock(saved); }
+        try { const result = await validateLicense(key); if (!result.ok) return $('#licenseError').textContent = result.message; await KRDevices.register(key, 'mobile'); const saved = { key, validatedAt: Date.now() }; writeJSON(LICENSE_STORAGE_KEY, saved); unlock(saved); }
         catch (error) { $('#licenseError').textContent = error.message; }
         finally { button.disabled = false; button.textContent = 'Ativar acesso'; }
       });
