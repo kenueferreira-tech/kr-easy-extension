@@ -72,7 +72,7 @@
   <script>
     (() => {
       'use strict';
-      const CHECKOUT_URL = 'https://link.infinitepay.io/kr_05/VC1DLUMtSQ-rN2v88lmNB-47,00';
+      const CHECKOUT_ENDPOINT = '/api/create-checkout';
       const $ = (selector, context = document) => context.querySelector(selector);
       const $$ = (selector, context = document) => [...context.querySelectorAll(selector)];
       const toast = $('#toast');
@@ -107,12 +107,21 @@
       $$('.buy-button').forEach(button => button.addEventListener('click', () => openModal('purchaseModal')));
       $('#openGuide').addEventListener('click', () => openModal('guideModal'));
       $('#previewGuide').addEventListener('click', () => { closeModal('purchaseModal'); openModal('guideModal'); });
-      $('#goCheckout').addEventListener('click', () => {
-        if (CHECKOUT_URL && /^https:\/\//i.test(CHECKOUT_URL)) {
-          window.location.assign(CHECKOUT_URL);
-          return;
+      $('#goCheckout').addEventListener('click', async event => {
+        const button = event.currentTarget;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Gerando PIX seguro…';
+        try {
+          const response = await fetch(CHECKOUT_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+          const result = await response.json();
+          if (!response.ok || !result.url) throw new Error(result.error || 'Não foi possível iniciar o pagamento.');
+          window.location.assign(result.url);
+        } catch (error) {
+          notify(error.message || 'Não foi possível iniciar o pagamento. Tente novamente.');
+          button.disabled = false;
+          button.textContent = originalText;
         }
-        notify('Checkout ainda não conectado. Cadastre o endereço oficial na constante CHECKOUT_URL.');
       });
       $$('[data-close]').forEach(button => button.addEventListener('click', () => closeModal(button.dataset.close)));
       $$('.modal').forEach(modal => modal.addEventListener('click', event => { if (event.target === modal) closeModal(modal.id); }));
