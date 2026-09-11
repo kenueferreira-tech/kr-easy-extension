@@ -2,6 +2,11 @@ name: Build Android AAB
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "android-app-source.zip"
+      - ".github/workflows/build-android.yml"
 
 permissions:
   contents: read
