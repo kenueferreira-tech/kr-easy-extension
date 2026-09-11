@@ -1,0 +1,13 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "licenses": {
+      "$licenseHash": {
+        ".read": "$licenseHash.matches(/^[a-f0-9]{64}$/)",
+        ".write": false,
+        ".validate": "newData.hasChildren(['status', 'plan', 'createdAt']) && newData.child('status').isString() && (newData.child('status').val() === 'ativa' || newData.child('status').val() === 'inativa') && newData.child('plan').isString() && newData.child('createdAt').isString()"
+      }
+    }
+  }
+}
