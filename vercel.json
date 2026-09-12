@@ -9,6 +9,7 @@
     { "source": "/tutorial-aplicativo.html", "destination": "/manutencao.html", "permanent": false },
     { "source": "/instalar-aplicativo.html", "destination": "/manutencao.html", "permanent": false },
     { "source": "/ajuda.html", "destination": "/manutencao.html", "permanent": false },
+    { "source": "/contato.html", "destination": "/manutencao.html", "permanent": false },
     { "source": "/compartilhar.html", "destination": "/manutencao.html", "permanent": false }
   ]
 }
