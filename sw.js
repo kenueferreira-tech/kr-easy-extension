@@ -1,5 +1,5 @@
-const CACHE_NAME = 'kr-easy-v2';
-const APP_SHELL = ['/mobile.html', '/acesso.html', '/device-manager.js', '/access-devices.js', '/privacidade.html', '/termos.html', '/tutorial-instalacao.html', '/tutorial-links.js', '/tutorial-instalacao.png', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png'];
+const CACHE_NAME = 'kr-easy-v3';
+const APP_SHELL = ['/mobile.html', '/mobile-features.js', '/compartilhar.html', '/ajuda.html', '/tutorial-aplicativo.html', '/instalar-aplicativo.html', '/acesso.html', '/device-manager.js', '/access-devices.js', '/privacidade.html', '/termos.html', '/tutorial-instalacao.html', '/tutorial-links.js', '/tutorial-instalacao.png', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));

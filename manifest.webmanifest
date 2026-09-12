@@ -1,6 +1,7 @@
 {
   "name": "KR Easy Extension",
   "short_name": "KR Easy",
+  "id": "/mobile.html",
   "description": "Assistente de vendas e gerador de scripts para WhatsApp.",
   "lang": "pt-BR",
   "start_url": "/mobile.html",
@@ -8,6 +9,19 @@
   "display": "standalone",
   "background_color": "#050b08",
   "theme_color": "#07110b",
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    { "name": "Scripts rápidos", "short_name": "Scripts", "url": "/mobile.html?source=play&screen=scripts", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Gerar mensagem", "short_name": "Gerador", "url": "/mobile.html?source=play&screen=generator", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ],
+  "share_target": {
+    "action": "/compartilhar.html",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": { "title": "title", "text": "text", "url": "url" }
+  },
+  "related_applications": [{ "platform": "play", "id": "com.kenueferreira.kreasyextension" }],
+  "prefer_related_applications": true,
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }

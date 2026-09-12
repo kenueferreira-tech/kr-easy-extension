@@ -81,7 +81,8 @@
       let toastTimer;
       let lastFocusedElement = null;
 
-      $('#platformCta').textContent = isMobileDevice ? 'Abrir aplicativo no celular' : 'Instalar extensão no computador';
+      $('#platformCta').textContent = isMobileDevice ? 'Baixar aplicativo no celular' : 'Instalar extensão no computador';
+      $('#platformCta').href = isMobileDevice ? '/instalar-aplicativo.html' : '/acesso.html';
 
       function notify(message) {
         toast.textContent = message;

@@ -5,6 +5,10 @@
     { "source": "/mobile.html", "destination": "/manutencao.html", "permanent": false },
     { "source": "/acesso.html", "destination": "/manutencao.html", "permanent": false },
     { "source": "/pagamento-concluido.html", "destination": "/manutencao.html", "permanent": false },
-    { "source": "/tutorial-instalacao.html", "destination": "/manutencao.html", "permanent": false }
+    { "source": "/tutorial-instalacao.html", "destination": "/manutencao.html", "permanent": false },
+    { "source": "/tutorial-aplicativo.html", "destination": "/manutencao.html", "permanent": false },
+    { "source": "/instalar-aplicativo.html", "destination": "/manutencao.html", "permanent": false },
+    { "source": "/ajuda.html", "destination": "/manutencao.html", "permanent": false },
+    { "source": "/compartilhar.html", "destination": "/manutencao.html", "permanent": false }
   ]
 }
