@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#07110b">
+<title>Administração — KR Easy Extension</title>
+<style>
+:root{color-scheme:dark;--bg:#050b08;--card:#0b1710;--card2:#112119;--line:#203c2c;--text:#f1fff6;--muted:#9ab5a4;--green:#25d366;--neon:#69ff9f;--danger:#ff9090}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 0,rgba(37,211,102,.12),transparent 28%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}.wrap{width:min(1080px,calc(100% - 30px));margin:auto;padding:32px 0 60px}header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:12px;font-weight:850;font-size:20px}.mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,var(--neon),var(--green));color:#04190b;font-weight:950}.muted{color:var(--muted)}h1{margin:10px 0 5px;font-size:clamp(28px,5vw,40px);letter-spacing:-.04em}h2{margin:0 0 17px;font-size:19px}.panel{padding:22px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,rgba(17,33,25,.96),rgba(8,17,12,.96));margin-bottom:18px}.login{max-width:440px;margin:12vh auto}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{padding:16px;border:1px solid var(--line);border-radius:15px;background:#08140d}.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;margin-top:5px;font-size:27px}.field{display:block;margin:14px 0}.field span{display:block;margin-bottom:6px;color:var(--muted);font-size:13px}input,select{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:#07110b;color:var(--text);font:inherit}button{padding:12px 16px;border:0;border-radius:11px;background:linear-gradient(135deg,var(--neon),var(--green));color:#04190b;font:inherit;font-weight:850;cursor:pointer}button.secondary{border:1px solid var(--line);background:var(--card2);color:var(--text)}button:disabled{opacity:.55}.error{min-height:20px;color:var(--danger);font-size:13px}.success{color:var(--neon);overflow-wrap:anywhere}.keybox{padding:14px;border:1px dashed #315440;border-radius:12px;background:#07100b;font:700 18px ui-monospace,monospace;overflow-wrap:anywhere}.keybox button{margin-top:10px;font:700 14px system-ui}canvas{width:100%;height:300px;display:block}.legend{display:flex;flex-wrap:wrap;gap:16px;color:var(--muted);font-size:12px}.legend i{display:inline-block;width:9px;height:9px;margin-right:5px;border-radius:50%}.notice{font-size:12px;color:var(--muted);margin-top:12px}.campaigns{display:flex;flex-wrap:wrap;gap:9px}.campaign{padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:#08140d;font-size:12px}.hidden{display:none!important}@media(max-width:650px){.grid{grid-template-columns:repeat(2,1fr)}.panel{padding:17px}canvas{height:250px}header{align-items:flex-start}}
+</style></head>
+<body><main class="wrap">
+<header><div class="brand"><span class="mark">KR</span><span>KR Easy · Administração</span></div><button class="secondary hidden" id="logout">Sair</button></header>
+<section class="panel login" id="loginPanel"><h1>Acesso administrativo</h1><p class="muted">Entre com a senha administrativa configurada no servidor.</p><form id="loginForm"><label class="field"><span>Senha</span><input id="password" type="password" autocomplete="current-password" required></label><p class="error" id="loginError"></p><button type="submit">Entrar</button></form></section>
+<div id="dashboard" class="hidden">
+<section><h1>Painel do proprietário</h1><p class="muted">Indicadores do site, das compras confirmadas e do uso do app.</p></section>
+<section class="panel"><div class="grid">
+<div class="stat"><small>Compras confirmadas</small><strong id="purchases">—</strong></div>
+<div class="stat"><small>Receita confirmada</small><strong id="revenue">—</strong></div>
+<div class="stat"><small>Licenças criadas por você</small><strong id="grants">—</strong></div>
+<div class="stat"><small>Visitas ao site · 30 dias</small><strong id="visits">—</strong></div>
+<div class="stat"><small>Aberturas do app · 30 dias</small><strong id="opens">—</strong></div>
+<div class="stat"><small>Dispositivos ativos · 30 dias</small><strong id="devices">—</strong></div>
+</div><p class="notice">Visitas e aberturas são contagens aproximadas por sessão. Dispositivos ativos usam o último acesso registrado. Compras contam apenas pagamentos confirmados pela InfinitePay.</p></section>
+<section class="panel"><h2>Divulgação e atividade · últimos 14 dias</h2><canvas id="chart" aria-label="Gráfico de visitas, aberturas do app e compras"></canvas><div class="legend"><span><i style="background:#69ff9f"></i>Visitas</span><span><i style="background:#63a7ff"></i>Aberturas do app</span><span><i style="background:#ffd66b"></i>Compras</span></div></section>
+<section class="panel"><h2>Visitas por origem/campanha · 30 dias</h2><div id="campaigns" class="campaigns"></div><p class="notice">Para separar anúncios e redes sociais, use links com utm_source, por exemplo ?utm_source=instagram.</p></section>
+<section class="panel"><h2>Gerar licença</h2><p class="muted">A licença será gravada diretamente no Firebase e poderá ser ativada no app.</p><form id="licenseForm"><div class="grid" style="grid-template-columns:1fr 1fr"><label class="field"><span>Tipo de acesso</span><select id="kind"><option value="owner">Acesso do proprietário · vitalício</option><option value="review">Teste para análise · 30 dias</option><option value="courtesy">Cortesia · vitalício</option></select></label><label class="field"><span>Observação interna (opcional)</span><input id="note" maxlength="120" placeholder="Ex.: teste Play Console"></label></div><p class="error" id="licenseError"></p><button type="submit" id="createLicense">Gerar e cadastrar licença</button></form><div id="licenseResult" class="hidden" style="margin-top:18px"><p class="success">Licença cadastrada. Copie e guarde a chave, ela será exibida somente agora.</p><div class="keybox"><span id="newKey"></span><br><button type="button" class="secondary" id="copyKey">Copiar chave</button></div><p class="notice" id="expiry"></p></div></section>
+</div>
+</main>
+<script>
+(() => {
+const $ = selector => document.querySelector(selector);
+const loginPanel = $('#loginPanel'), dashboard = $('#dashboard'), logout = $('#logout');
+const money = cents => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(cents/100);
+async function api(url, options={}) {
+  const response = await fetch(url, {...options, credentials:'same-origin', headers:{'Content-Type':'application/json',...(options.headers||{})}});
+  const result = response.status === 204 ? {} : await response.json().catch(()=>({}));
+  if (!response.ok) throw new Error(result.error || 'Não foi possível concluir a solicitação.');
+  return result;
+}
+function showLoggedIn(value) { loginPanel.classList.toggle('hidden',value); dashboard.classList.toggle('hidden',!value); logout.classList.toggle('hidden',!value); }
+async function refresh() {
+  try {
+    const data = await api('/api/admin/dashboard');
+    showLoggedIn(true);
+    $('#purchases').textContent = data.totals.purchases;
+    $('#revenue').textContent = money(data.totals.revenueCents);
+    $('#grants').textContent = data.totals.ownerGrants;
+    $('#visits').textContent = data.totals.visits30d;
+    $('#opens').textContent = data.totals.appOpens30d;
+    $('#devices').textContent = data.totals.activeDevices30d;
+    $('#campaigns').innerHTML = data.campaigns.length ? data.campaigns.map(item => '<span class="campaign">'+escapeHtml(item.source)+': <b>'+item.count+'</b></span>').join('') : '<span class="muted">Ainda sem dados de campanha.</span>';
+    draw(data.days || []);
+  } catch (error) {
+    if (/Entre na área/.test(error.message)) showLoggedIn(false);
+    else $('#loginError').textContent = error.message;
+  }
+}
+function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function draw(days) {
+  const canvas = $('#chart'), ratio = window.devicePixelRatio || 1, width = canvas.clientWidth, height = canvas.clientHeight;
+  if (!width || !height) return;
+  canvas.width = width * ratio; canvas.height = height * ratio;
+  const ctx = canvas.getContext('2d'); ctx.scale(ratio,ratio); ctx.clearRect(0,0,width,height);
+  const pad={l:34,r:8,t:14,b:30}, plotW=width-pad.l-pad.r, plotH=height-pad.t-pad.b;
+  const max=Math.max(1,...days.flatMap(d=>[d.visits,d.appOpens,d.purchases]));
+  ctx.font='11px system-ui'; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.strokeStyle='#203c2c'; ctx.fillStyle='#9ab5a4'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+plotH*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(width-pad.r,y);ctx.stroke();ctx.fillText(String(Math.round(max*(4-i)/4)),pad.l-7,y);}
+  const sets=[['visits','#69ff9f'],['appOpens','#63a7ff'],['purchases','#ffd66b']];
+  sets.forEach(([key,color])=>{ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2.5;days.forEach((d,i)=>{const x=pad.l+(days.length<2?plotW/2:i*plotW/(days.length-1));const y=pad.t+plotH-(Number(d[key]||0)/max)*plotH;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();});
+  ctx.fillStyle='#9ab5a4';ctx.textAlign='center';ctx.textBaseline='top';
+  days.forEach((d,i)=>{if(i%2===0||i===days.length-1){const x=pad.l+(days.length<2?plotW/2:i*plotW/(days.length-1));ctx.fillText(d.date.slice(5),x,height-pad.b+8);}});
+}
+$('#loginForm').addEventListener('submit',async event=>{event.preventDefault();const button=event.currentTarget.querySelector('button');button.disabled=true;$('#loginError').textContent='';try{await api('/api/admin/auth',{method:'POST',body:JSON.stringify({password:$('#password').value})});$('#password').value='';await refresh();}catch(e){$('#loginError').textContent=e.message;}finally{button.disabled=false;}});
+logout.addEventListener('click',async()=>{await api('/api/admin/auth',{method:'DELETE'}).catch(()=>{});showLoggedIn(false);});
+$('#licenseForm').addEventListener('submit',async event=>{event.preventDefault();const button=$('#createLicense');button.disabled=true;$('#licenseError').textContent='';$('#licenseResult').classList.add('hidden');try{const result=await api('/api/admin/licenses',{method:'POST',body:JSON.stringify({kind:$('#kind').value,note:$('#note').value})});$('#newKey').textContent=result.key;$('#expiry').textContent=result.expiresAt?'Expira em 30 dias ('+new Date(result.expiresAt).toLocaleDateString('pt-BR')+').':'Acesso vitalício.';$('#licenseResult').classList.remove('hidden');$('#note').value='';await refresh();}catch(e){$('#licenseError').textContent=e.message;}finally{button.disabled=false;}});
+$('#copyKey').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#newKey').textContent);$('#copyKey').textContent='Copiada';setTimeout(()=>$('#copyKey').textContent='Copiar chave',1500);}catch{}});
+window.addEventListener('resize',()=>{if(!dashboard.classList.contains('hidden'))refresh();});
+api('/api/admin/auth').then(state=>state.authenticated?refresh():showLoggedIn(false)).catch(()=>showLoggedIn(false));
+})();
+</script></body></html>
