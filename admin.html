@@ -18,10 +18,8 @@
 <div class="stat"><small>Receita confirmada</small><strong id="revenue">—</strong></div>
 <div class="stat"><small>Licenças criadas por você</small><strong id="grants">—</strong></div>
 <div class="stat"><small>Visitas ao site · 30 dias</small><strong id="visits">—</strong></div>
-<div class="stat"><small>Aberturas do app · 30 dias</small><strong id="opens">—</strong></div>
-<div class="stat"><small>Dispositivos ativos · 30 dias</small><strong id="devices">—</strong></div>
 </div><p class="notice">Visitas e aberturas são contagens aproximadas por sessão. Dispositivos ativos usam o último acesso registrado. Compras contam apenas pagamentos confirmados pela InfinitePay.</p></section>
-<section class="panel"><h2>Divulgação e atividade · últimos 14 dias</h2><canvas id="chart" aria-label="Gráfico de visitas, aberturas do app e compras"></canvas><div class="legend"><span><i style="background:#69ff9f"></i>Visitas</span><span><i style="background:#63a7ff"></i>Aberturas do app</span><span><i style="background:#ffd66b"></i>Compras</span></div></section>
+<section class="panel"><h2>Divulgação e atividade · últimos 14 dias</h2><canvas id="chart" aria-label="Gráfico de visitas ao site e compras"></canvas><div class="legend"><span><i style="background:#69ff9f"></i>Visitas</span><span><i style="background:#ffd66b"></i>Compras</span></div></section>
 <section class="panel"><h2>Visitas por origem/campanha · 30 dias</h2><div id="campaigns" class="campaigns"></div><p class="notice">Para separar anúncios e redes sociais, use links com utm_source, por exemplo ?utm_source=instagram.</p></section>
 <section class="panel"><h2>Gerar licença</h2><p class="muted">A licença será gravada diretamente no Firebase e poderá ser ativada no app.</p><form id="licenseForm"><div class="grid" style="grid-template-columns:1fr 1fr"><label class="field"><span>Tipo de acesso</span><select id="kind"><option value="owner">Acesso do proprietário · vitalício</option><option value="review">Teste para análise · 30 dias</option><option value="courtesy">Cortesia · vitalício</option></select></label><label class="field"><span>Observação interna (opcional)</span><input id="note" maxlength="120" placeholder="Ex.: teste Play Console"></label></div><p class="error" id="licenseError"></p><button type="submit" id="createLicense">Gerar e cadastrar licença</button></form><div id="licenseResult" class="hidden" style="margin-top:18px"><p class="success">Licença cadastrada. Copie e guarde a chave, ela será exibida somente agora.</p><div class="keybox"><span id="newKey"></span><br><button type="button" class="secondary" id="copyKey">Copiar chave</button></div><p class="notice" id="expiry"></p></div></section>
 </div>
@@ -46,8 +44,8 @@ async function refresh() {
     $('#revenue').textContent = money(data.totals.revenueCents);
     $('#grants').textContent = data.totals.ownerGrants;
     $('#visits').textContent = data.totals.visits30d;
-    $('#opens').textContent = data.totals.appOpens30d;
-    $('#devices').textContent = data.totals.activeDevices30d;
+    
+    
     $('#campaigns').innerHTML = data.campaigns.length ? data.campaigns.map(item => '<span class="campaign">'+escapeHtml(item.source)+': <b>'+item.count+'</b></span>').join('') : '<span class="muted">Ainda sem dados de campanha.</span>';
     draw(data.days || []);
   } catch (error) {
@@ -65,7 +63,7 @@ function draw(days) {
   const max=Math.max(1,...days.flatMap(d=>[d.visits,d.purchases]));
   ctx.font='11px system-ui'; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.strokeStyle='#203c2c'; ctx.fillStyle='#9ab5a4'; ctx.lineWidth=1;
   for(let i=0;i<=4;i++){const y=pad.t+plotH*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(width-pad.r,y);ctx.stroke();ctx.fillText(String(Math.round(max*(4-i)/4)),pad.l-7,y);}
-  const sets=[['visits','#69ff9f'],['appOpens','#63a7ff'],['purchases','#ffd66b']];
+  const sets=[['visits','#69ff9f'],['purchases','#ffd66b']];
   sets.forEach(([key,color])=>{ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2.5;days.forEach((d,i)=>{const x=pad.l+(days.length<2?plotW/2:i*plotW/(days.length-1));const y=pad.t+plotH-(Number(d[key]||0)/max)*plotH;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();});
   ctx.fillStyle='#9ab5a4';ctx.textAlign='center';ctx.textBaseline='top';
   days.forEach((d,i)=>{if(i%2===0||i===days.length-1){const x=pad.l+(days.length<2?plotW/2:i*plotW/(days.length-1));ctx.fillText(d.date.slice(5),x,height-pad.b+8);}});
