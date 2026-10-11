@@ -1,6 +1,6 @@
 const { database } = require('../server/admin');
 
-const allowedEvents = new Set(['site_view', 'app_open']);
+const allowedEvents = new Set(['site_view']);
 const allowedSource = value => /^[a-z0-9_-]{1,32}$/.test(String(value || '')) ? String(value) : 'direct';
 
 module.exports = async (request, response) => {

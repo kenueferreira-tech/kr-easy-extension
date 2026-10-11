@@ -62,7 +62,7 @@ function draw(days) {
   canvas.width = width * ratio; canvas.height = height * ratio;
   const ctx = canvas.getContext('2d'); ctx.scale(ratio,ratio); ctx.clearRect(0,0,width,height);
   const pad={l:34,r:8,t:14,b:30}, plotW=width-pad.l-pad.r, plotH=height-pad.t-pad.b;
-  const max=Math.max(1,...days.flatMap(d=>[d.visits,d.appOpens,d.purchases]));
+  const max=Math.max(1,...days.flatMap(d=>[d.visits,d.purchases]));
   ctx.font='11px system-ui'; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.strokeStyle='#203c2c'; ctx.fillStyle='#9ab5a4'; ctx.lineWidth=1;
   for(let i=0;i<=4;i++){const y=pad.t+plotH*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(width-pad.r,y);ctx.stroke();ctx.fillText(String(Math.round(max*(4-i)/4)),pad.l-7,y);}
   const sets=[['visits','#69ff9f'],['appOpens','#63a7ff'],['purchases','#ffd66b']];

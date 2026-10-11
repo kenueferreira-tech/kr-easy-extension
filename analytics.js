@@ -1,7 +1,7 @@
 (() => {
   try {
     const event = document.currentScript && document.currentScript.dataset.event;
-    if (!['site_view', 'app_open'].includes(event)) return;
+    if (event !== 'site_view') return;
     const storageKey = 'kr-analytics-' + event;
     if (sessionStorage.getItem(storageKey)) return;
     sessionStorage.setItem(storageKey, '1');

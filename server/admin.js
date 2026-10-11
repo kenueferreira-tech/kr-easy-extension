@@ -122,16 +122,10 @@ async function readDashboard() {
   const licenses = licensesSnap.val() || {};
   const paid = [];
   let ownerGrants = 0;
-  let activeDevices30d = 0;
-  const now = Date.now();
   for (const license of Object.values(licenses)) {
     if (!license || typeof license !== 'object') continue;
     if (license.transactionNsu && license.orderNsu) paid.push(license);
     else if (license.grantSource === 'owner_admin') ownerGrants++;
-    for (const device of Object.values(license.devices || {})) {
-      const seen = Date.parse(device && device.lastSeenAt || '');
-      if (Number.isFinite(seen) && now - seen <= 30 * 86400000) activeDevices30d++;
-    }
   }
   const raw = analyticsSnap.val() || {};
   const days = [];
@@ -148,7 +142,6 @@ async function readDashboard() {
     days.push({
       date: key,
       visits: Number(data.site_view || 0),
-      appOpens: Number(data.app_open || 0),
       purchases: purchasesByDay[key] || 0
     });
   }
@@ -166,8 +159,6 @@ async function readDashboard() {
       revenueCents: totalPurchases * 4700,
       ownerGrants,
       visits30d: Object.entries(raw).filter(([date]) => Date.now() - Date.parse(date + 'T00:00:00Z') <= 30 * 86400000).reduce((sum, [, value]) => sum + Number(value && value.site_view || 0), 0),
-      appOpens30d: Object.entries(raw).filter(([date]) => Date.now() - Date.parse(date + 'T00:00:00Z') <= 30 * 86400000).reduce((sum, [, value]) => sum + Number(value && value.app_open || 0), 0),
-      activeDevices30d
     },
     days,
     campaigns: Object.entries(campaigns).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([source, count]) => ({ source, count }))
