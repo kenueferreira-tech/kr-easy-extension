@@ -6,9 +6,17 @@
       "$licenseHash": {
         ".read": "$licenseHash.matches(/^[a-f0-9]{64}$/)",
         ".write": false,
-        ".indexOn": ["orderNsu", "transactionNsu"],
+        ".indexOn": [
+          "orderNsu",
+          "transactionNsu"
+        ],
         ".validate": "newData.hasChildren(['status', 'plan', 'createdAt']) && newData.child('status').isString() && (newData.child('status').val() === 'ativa' || newData.child('status').val() === 'inativa') && newData.child('plan').isString() && newData.child('createdAt').isString()"
       }
+    },
+    "supportRequests": {
+      ".indexOn": [
+        "createdAt"
+      ]
     }
   }
 }
