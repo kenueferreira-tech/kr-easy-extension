@@ -22,6 +22,8 @@
 <section class="panel"><h2>Divulgação e atividade · últimos 14 dias</h2><canvas id="chart" aria-label="Gráfico de visitas ao site e compras"></canvas><div class="legend"><span><i style="background:#69ff9f"></i>Visitas</span><span><i style="background:#ffd66b"></i>Compras</span></div></section>
 <section class="panel"><h2>Visitas por origem/campanha · 30 dias</h2><div id="campaigns" class="campaigns"></div><p class="notice">Para separar anúncios e redes sociais, use links com utm_source, por exemplo ?utm_source=instagram.</p></section><section class="panel"><h2>Solicitações de reembolso</h2><p class="notice">Revise cada pedido. Aprovar não devolve o dinheiro: faça o cancelamento na InfinitePay. Marque como concluído somente depois de confirmar o cancelamento; isso desativa a licença.</p><p class="error" id="refundError"></p><div id="refundRequests"><span class="muted">Carregando solicitações…</span></div></section>
 <section class="panel"><h2>Caixa de entrada do suporte</h2><p class="notice">As mensagens enviadas pelo formulário do site aparecem aqui. Atualize o status e use “Responder por e-mail” para retornar ao cliente.</p><p class="error" id="supportError"></p><div id="supportRequests"><span class="muted">Carregando chamados…</span></div></section><section class="panel"><h2>Gerar licença</h2><p class="muted">A licença será gravada diretamente no Firebase e poderá ser ativada no app.</p><form id="licenseForm"><div class="grid" style="grid-template-columns:1fr 1fr"><label class="field"><span>Tipo de acesso</span><select id="kind"><option value="owner">Acesso do proprietário · vitalício</option><option value="review">Teste para análise · 30 dias</option><option value="courtesy">Cortesia · vitalício</option></select></label><label class="field"><span>Observação interna (opcional)</span><input id="note" maxlength="120" placeholder="Ex.: teste Play Console"></label></div><p class="error" id="licenseError"></p><button type="submit" id="createLicense">Gerar e cadastrar licença</button></form><div id="licenseResult" class="hidden" style="margin-top:18px"><p class="success">Licença cadastrada. Copie e guarde a chave, ela será exibida somente agora.</p><div class="keybox"><span id="newKey"></span><br><button type="button" class="secondary" id="copyKey">Copiar chave</button></div><p class="notice" id="expiry"></p></div></section>
+
+<section class="panel"><h2>Revogar licença existente</h2><p class="muted">Digite a chave completa para bloquear o acesso associado a ela. O registro da compra será preservado no histórico.</p><form id="revokeLicenseForm"><label class="field"><span>Chave de licença</span><input id="revokeKey" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="80" placeholder="KREASY-XXXX-XXXX-XXXX" required></label><p class="error" id="revokeLicenseError"></p><p class="success" id="revokeLicenseResult" role="status"></p><button type="submit" class="secondary" id="revokeLicenseButton">Revogar e bloquear acesso</button></form><p class="notice">A revogação impede novas validações da chave e não faz estorno de pagamento. Use com cuidado para não bloquear um cliente por engano.</p></section>
 </div>
 </main>
 <script>
@@ -119,6 +121,20 @@ $('#supportRequests').addEventListener('click',async event=>{
   button.disabled=true;$('#supportError').textContent='';
   try{await api('/api/admin/refunds?type=support',{method:'PATCH',body:JSON.stringify({id:button.dataset.id,status:button.dataset.status})});await loadSupportRequests();}
   catch(failure){$('#supportError').textContent=failure.message;button.disabled=false;}
+});
+
+$('#revokeLicenseForm').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const key=$('#revokeKey').value.trim();
+  if(!confirm('Revogar esta chave agora? O aplicativo deixará de aceitar essa licença. Esta ação não estorna a compra.'))return;
+  const button=$('#revokeLicenseButton');
+  button.disabled=true;$('#revokeLicenseError').textContent='';$('#revokeLicenseResult').textContent='';
+  try{
+    const result=await api('/api/admin/licenses',{method:'DELETE',body:JSON.stringify({key})});
+    $('#revokeKey').value='';
+    $('#revokeLicenseResult').textContent=result.alreadyInactive?'Essa licença já estava revogada.':'Licença revogada. O acesso será bloqueado na próxima validação.';
+  }catch(failure){$('#revokeLicenseError').textContent=failure.message;}
+  finally{button.disabled=false;}
 });
 $('#copyKey').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#newKey').textContent);$('#copyKey').textContent='Copiada';setTimeout(()=>$('#copyKey').textContent='Copiar chave',1500);}catch{}});
 window.addEventListener('resize',()=>{if(!dashboard.classList.contains('hidden'))refresh();});
