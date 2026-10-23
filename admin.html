@@ -7,7 +7,7 @@
 <style>
 :root{color-scheme:dark;--bg:#050b08;--card:#0b1710;--card2:#112119;--line:#203c2c;--text:#f1fff6;--muted:#9ab5a4;--green:#25d366;--neon:#69ff9f;--danger:#ff9090}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 0,rgba(37,211,102,.12),transparent 28%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}.wrap{width:min(1080px,calc(100% - 30px));margin:auto;padding:32px 0 60px}header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:12px;font-weight:850;font-size:20px}.mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,var(--neon),var(--green));color:#04190b;font-weight:950}.muted{color:var(--muted)}h1{margin:10px 0 5px;font-size:clamp(28px,5vw,40px);letter-spacing:-.04em}h2{margin:0 0 17px;font-size:19px}.panel{padding:22px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,rgba(17,33,25,.96),rgba(8,17,12,.96));margin-bottom:18px}.login{max-width:440px;margin:12vh auto}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{padding:16px;border:1px solid var(--line);border-radius:15px;background:#08140d}.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;margin-top:5px;font-size:27px}.field{display:block;margin:14px 0}.field span{display:block;margin-bottom:6px;color:var(--muted);font-size:13px}input,select{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:#07110b;color:var(--text);font:inherit}button{padding:12px 16px;border:0;border-radius:11px;background:linear-gradient(135deg,var(--neon),var(--green));color:#04190b;font:inherit;font-weight:850;cursor:pointer}button.secondary{border:1px solid var(--line);background:var(--card2);color:var(--text)}button:disabled{opacity:.55}.error{min-height:20px;color:var(--danger);font-size:13px}.success{color:var(--neon);overflow-wrap:anywhere}.keybox{padding:14px;border:1px dashed #315440;border-radius:12px;background:#07100b;font:700 18px ui-monospace,monospace;overflow-wrap:anywhere}.keybox button{margin-top:10px;font:700 14px system-ui}canvas{width:100%;height:300px;display:block}.legend{display:flex;flex-wrap:wrap;gap:16px;color:var(--muted);font-size:12px}.legend i{display:inline-block;width:9px;height:9px;margin-right:5px;border-radius:50%}.notice{font-size:12px;color:var(--muted);margin-top:12px}.campaigns{display:flex;flex-wrap:wrap;gap:9px}.campaign{padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:#08140d;font-size:12px}.hidden{display:none!important}@media(max-width:650px){.grid{grid-template-columns:repeat(2,1fr)}.panel{padding:17px}canvas{height:250px}header{align-items:flex-start}}
-</style></head>
+.refund-card{padding:16px;margin:12px 0;border:1px solid var(--line);border-radius:14px;background:#08140d}.refund-meta{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:13px}.refund-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.refund-actions button{padding:9px 12px;font-size:13px}.refund-details{white-space:pre-wrap;overflow-wrap:anywhere}</style></head>
 <body><main class="wrap">
 <header><div class="brand"><span class="mark">KR</span><span>KR Easy · Administração</span></div><button class="secondary hidden" id="logout">Sair</button></header>
 <section class="panel login" id="loginPanel"><h1>Acesso administrativo</h1><p class="muted">Entre com a senha administrativa configurada no servidor.</p><form id="loginForm"><label class="field"><span>Senha</span><input id="password" type="password" autocomplete="current-password" required></label><p class="error" id="loginError"></p><button type="submit">Entrar</button></form></section>
@@ -20,7 +20,7 @@
 <div class="stat"><small>Visitas ao site · 30 dias</small><strong id="visits">—</strong></div>
 </div><p class="notice">Visitas são contagens aproximadas por sessão, não pessoas únicas. Compras contam apenas pagamentos confirmados pela InfinitePay.</p></section>
 <section class="panel"><h2>Divulgação e atividade · últimos 14 dias</h2><canvas id="chart" aria-label="Gráfico de visitas ao site e compras"></canvas><div class="legend"><span><i style="background:#69ff9f"></i>Visitas</span><span><i style="background:#ffd66b"></i>Compras</span></div></section>
-<section class="panel"><h2>Visitas por origem/campanha · 30 dias</h2><div id="campaigns" class="campaigns"></div><p class="notice">Para separar anúncios e redes sociais, use links com utm_source, por exemplo ?utm_source=instagram.</p></section>
+<section class="panel"><h2>Visitas por origem/campanha · 30 dias</h2><div id="campaigns" class="campaigns"></div><p class="notice">Para separar anúncios e redes sociais, use links com utm_source, por exemplo ?utm_source=instagram.</p></section><section class="panel"><h2>Solicitações de reembolso</h2><p class="notice">Revise cada pedido. Aprovar não devolve o dinheiro: faça o cancelamento na InfinitePay. Marque como concluído somente depois de confirmar o cancelamento; isso desativa a licença.</p><p class="error" id="refundError"></p><div id="refundRequests"><span class="muted">Carregando solicitações…</span></div></section>
 <section class="panel"><h2>Gerar licença</h2><p class="muted">A licença será gravada diretamente no Firebase e poderá ser ativada no app.</p><form id="licenseForm"><div class="grid" style="grid-template-columns:1fr 1fr"><label class="field"><span>Tipo de acesso</span><select id="kind"><option value="owner">Acesso do proprietário · vitalício</option><option value="review">Teste para análise · 30 dias</option><option value="courtesy">Cortesia · vitalício</option></select></label><label class="field"><span>Observação interna (opcional)</span><input id="note" maxlength="120" placeholder="Ex.: teste Play Console"></label></div><p class="error" id="licenseError"></p><button type="submit" id="createLicense">Gerar e cadastrar licença</button></form><div id="licenseResult" class="hidden" style="margin-top:18px"><p class="success">Licença cadastrada. Copie e guarde a chave, ela será exibida somente agora.</p><div class="keybox"><span id="newKey"></span><br><button type="button" class="secondary" id="copyKey">Copiar chave</button></div><p class="notice" id="expiry"></p></div></section>
 </div>
 </main>
@@ -36,7 +36,24 @@ async function api(url, options={}) {
   return result;
 }
 function showLoggedIn(value) { loginPanel.classList.toggle('hidden',value); dashboard.classList.toggle('hidden',!value); logout.classList.toggle('hidden',!value); }
-async function refresh() {
+async function loadRefundRequests() {
+  const list=$('#refundRequests'), error=$('#refundError');
+  try {
+    const data=await api('/api/admin/refunds');
+    const labels={recebido:'Recebido',em_analise:'Em análise',aprovado:'Aprovado para executar',negado:'Não aprovado',estorno_solicitado:'Cancelamento solicitado',reembolsado:'Cancelamento confirmado'};
+    const reasons={compra_acidental:'Compra por engano',nao_funcionou:'Não funcionou como esperado',nao_era_o_esperado:'Não era o esperado',outro:'Outro motivo'};
+    const actions={recebido:[['em_analise','Iniciar análise'],['negado','Não aprovar']],em_analise:[['aprovado','Aprovar para executar'],['negado','Não aprovar']],aprovado:[['estorno_solicitado','Marcar cancelamento solicitado'],['negado','Não aprovar']],estorno_solicitado:[['reembolsado','Confirmar cancelamento concluído']],negado:[['em_analise','Reabrir análise']],reembolsado:[]};
+    if(!data.requests.length){list.innerHTML='<p class="muted">Nenhuma solicitação recebida.</p>';return;}
+    list.innerHTML=data.requests.map(item=>{
+      const buttons=(actions[item.status]||[]).map(action=>'<button type="button" class="secondary refund-action" data-id="'+escapeHtml(item.id)+'" data-status="'+action[0]+'">'+action[1]+'</button>').join('');
+      const date=item.createdAt?new Date(item.createdAt).toLocaleString('pt-BR'):'—';
+      const mail='mailto:'+encodeURIComponent(String(item.email||''))+'?subject='+encodeURIComponent('Retorno sobre solicitação '+('KR-'+String(item.id||'').slice(0,8).toUpperCase()));
+      return '<article class="refund-card"><div class="refund-meta"><b>'+escapeHtml(labels[item.status]||item.status)+'</b><span>Protocolo KR-'+escapeHtml(String(item.id||'').slice(0,8).toUpperCase())+'</span><span>'+escapeHtml(date)+'</span></div><p><b>Motivo:</b> '+escapeHtml(reasons[item.reason]||item.reason)+'</p><p><b>Compra:</b> '+escapeHtml(item.purchaseReference||'')+' ('+(item.referenceType==='order'?'pedido':'transação')+')</p><p><b>E-mail:</b> <a href="'+mail+'">'+escapeHtml(item.email||'')+'</a></p><p class="refund-details">'+escapeHtml(item.details||'')+'</p><div class="refund-actions">'+buttons+'</div></article>';
+    }).join('');
+    error.textContent='';
+  } catch(failure){ error.textContent=failure.message; }
+}
+async function refresh() {loadRefundRequests();
   try {
     const data = await api('/api/admin/dashboard');
     showLoggedIn(true);
@@ -71,6 +88,14 @@ function draw(days) {
 $('#loginForm').addEventListener('submit',async event=>{event.preventDefault();const button=event.currentTarget.querySelector('button');button.disabled=true;$('#loginError').textContent='';try{await api('/api/admin/auth',{method:'POST',body:JSON.stringify({password:$('#password').value})});$('#password').value='';await refresh();}catch(e){$('#loginError').textContent=e.message;}finally{button.disabled=false;}});
 logout.addEventListener('click',async()=>{await api('/api/admin/auth',{method:'DELETE'}).catch(()=>{});showLoggedIn(false);});
 $('#licenseForm').addEventListener('submit',async event=>{event.preventDefault();const button=$('#createLicense');button.disabled=true;$('#licenseError').textContent='';$('#licenseResult').classList.add('hidden');try{const result=await api('/api/admin/licenses',{method:'POST',body:JSON.stringify({kind:$('#kind').value,note:$('#note').value})});$('#newKey').textContent=result.key;$('#expiry').textContent=result.expiresAt?'Expira em 30 dias ('+new Date(result.expiresAt).toLocaleDateString('pt-BR')+').':'Acesso vitalício.';$('#licenseResult').classList.remove('hidden');$('#note').value='';await refresh();}catch(e){$('#licenseError').textContent=e.message;}finally{button.disabled=false;}});
+$('#refundRequests').addEventListener('click',async event=>{
+  const button=event.target.closest('.refund-action');if(!button)return;
+  const status=button.dataset.status;
+  if(status==='reembolsado'&&!confirm('Só confirme depois que a InfinitePay mostrar o cancelamento concluído. A licença ficará inativa.'))return;
+  button.disabled=true;$('#refundError').textContent='';
+  try{await api('/api/admin/refunds',{method:'PATCH',body:JSON.stringify({id:button.dataset.id,status})});await loadRefundRequests();}
+  catch(failure){$('#refundError').textContent=failure.message;button.disabled=false;}
+});
 $('#copyKey').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#newKey').textContent);$('#copyKey').textContent='Copiada';setTimeout(()=>$('#copyKey').textContent='Copiar chave',1500);}catch{}});
 window.addEventListener('resize',()=>{if(!dashboard.classList.contains('hidden'))refresh();});
 api('/api/admin/auth').then(state=>state.authenticated?refresh():showLoggedIn(false)).catch(()=>showLoggedIn(false));
