@@ -113,6 +113,22 @@ async function createOwnerLicense({ kind, note }) {
   throw new Error('Não consegui reservar uma chave única. Tente novamente.');
 }
 
+
+async function revokeLicense(key) {
+  const normalizedKey = String(key || '').trim().toUpperCase().replace(/\\s+/g, '');
+  if (normalizedKey.length < 8 || normalizedKey.length > 80) throw new Error('Digite a chave completa da licença.');
+  const hash = sha256(normalizedKey);
+  const ref = database().ref('licenses/' + hash);
+  const revokedAt = new Date().toISOString();
+  const result = await ref.transaction(current => {
+    if (!current) return;
+    if (current.status === 'inativa') return current;
+    return { ...current, status: 'inativa', active: false, revokedAt, revokedBy: 'owner_admin' };
+  });
+  if (!result.committed || !result.snapshot.exists()) throw new Error('Não encontrei uma licença com essa chave.');
+  return { ok: true, alreadyInactive: result.snapshot.val().revokedAt !== revokedAt };
+}
+
 async function readDashboard() {
   const db = database();
   const [licensesSnap, analyticsSnap] = await Promise.all([
@@ -165,4 +181,4 @@ async function readDashboard() {
   };
 }
 
-module.exports = { database, sameOrigin, safeEqual, authenticated, setSession, clearSession, requireAdmin, createOwnerLicense, readDashboard };
+module.exports = { database, sameOrigin, safeEqual, authenticated, setSession, clearSession, requireAdmin, createOwnerLicense, revokeLicense, readDashboard };
