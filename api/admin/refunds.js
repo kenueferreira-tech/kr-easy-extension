@@ -2,15 +2,18 @@
 
 const { requireAdmin } = require('../../server/admin');
 const { listRefundRequests, updateRefundRequest } = require('../../server/refunds');
+const { listSupportRequests, updateSupportRequest } = require('../../server/support');
 
 module.exports = async (request, response) => {
   response.setHeader('Cache-Control', 'no-store');
   if (!await requireAdmin(request, response)) return;
   try {
-    if (request.method === 'GET') return response.status(200).json({ requests: await listRefundRequests() });
+    const support = request.query && request.query.type === 'support';
+    if (request.method === 'GET') return response.status(200).json({ requests: await (support ? listSupportRequests() : listRefundRequests()) });
     if (request.method === 'PATCH') {
       const body = request.body || {};
-      const result = await updateRefundRequest(String(body.id || ''), String(body.status || ''));
+      const update = support ? updateSupportRequest : updateRefundRequest;
+      const result = await update(String(body.id || ''), String(body.status || ''));
       return response.status(200).json(result);
     }
     response.setHeader('Allow', 'GET, PATCH');
