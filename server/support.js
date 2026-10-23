@@ -28,7 +28,7 @@ async function createSupportRequest(input) {
   const message = cleanText(input.message, 3000);
 
   if (name.length < 2) throw new Error('Informe seu nome.');
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) throw new Error('Informe um e-mail válido.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Informe um e-mail válido.');
   if (!CATEGORIES.has(category)) throw new Error('Selecione o assunto do contato.');
   if (subject.length < 3) throw new Error('Descreva o assunto em poucas palavras.');
   if (message.length < 15) throw new Error('Conte um pouco mais sobre o que aconteceu (mínimo de 15 caracteres).');
