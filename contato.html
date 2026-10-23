@@ -13,9 +13,9 @@ document.getElementById('supportForm').addEventListener('submit',async event=>{
   event.preventDefault();
   const form=event.currentTarget, button=document.getElementById('submitSupport'), status=document.getElementById('formStatus');
   button.disabled=true;status.textContent='Enviando chamado…';status.style.color='#b5cdbd';
-  const data=Object.fromEntries(new FormData(form).entries());
+  const data=Object.fromEntries(new FormData(form).entries());data.requestType='support';
   try{
-    const response=await fetch('/api/support-requests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const response=await fetch('/api/refund-requests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     const result=await response.json().catch(()=>({}));
     if(!response.ok)throw new Error(result.error||'Não foi possível enviar a mensagem.');
     status.textContent='Chamado registrado: '+result.ticket+'. Guarde este protocolo.';status.style.color='#69ff9f';form.reset();
