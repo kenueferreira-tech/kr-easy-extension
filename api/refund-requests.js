@@ -1,6 +1,7 @@
 'use strict';
 
 const { createRefundRequest } = require('../server/refunds');
+const { createSupportRequest } = require('../server/support');
 
 function sameOrigin(request) {
   const origin = request.headers.origin;
@@ -23,7 +24,9 @@ module.exports = async (request, response) => {
   const body = request.body || {};
   if (typeof body.website === 'string' && body.website.trim()) return response.status(200).json({ ok: true });
   try {
-    const result = await createRefundRequest(body);
+    const result = body.requestType === 'support'
+      ? await createSupportRequest(body)
+      : await createRefundRequest(body);
     return response.status(201).json({ ok: true, ...result });
   } catch (error) {
     const expected = /Confira|Informe|Selecione|Conte|Não encontrei/.test(error.message || '');
