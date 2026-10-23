@@ -56,7 +56,7 @@ async function loadRefundRequests() {
 async function loadSupportRequests() {
   const list=$('#supportRequests'), error=$('#supportError');
   try {
-    const data=await api('/api/admin/support');
+    const data=await api('/api/admin/refunds?type=support');
     const labels={recebido:'Novo',em_atendimento:'Em atendimento',resolvido:'Resolvido'};
     const categories={instalacao:'Instalação',licenca:'Licença',pagamento:'Pagamento',problema_tecnico:'Problema técnico',outro:'Outro'};
     const actions={recebido:[['em_atendimento','Iniciar atendimento'],['resolvido','Marcar resolvido']],em_atendimento:[['resolvido','Marcar resolvido'],['recebido','Reabrir']],resolvido:[['em_atendimento','Reabrir atendimento']]};
@@ -117,7 +117,7 @@ $('#refundRequests').addEventListener('click',async event=>{
 $('#supportRequests').addEventListener('click',async event=>{
   const button=event.target.closest('.support-action');if(!button)return;
   button.disabled=true;$('#supportError').textContent='';
-  try{await api('/api/admin/support',{method:'PATCH',body:JSON.stringify({id:button.dataset.id,status:button.dataset.status})});await loadSupportRequests();}
+  try{await api('/api/admin/refunds?type=support',{method:'PATCH',body:JSON.stringify({id:button.dataset.id,status:button.dataset.status})});await loadSupportRequests();}
   catch(failure){$('#supportError').textContent=failure.message;button.disabled=false;}
 });
 $('#copyKey').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#newKey').textContent);$('#copyKey').textContent='Copiada';setTimeout(()=>$('#copyKey').textContent='Copiar chave',1500);}catch{}});
