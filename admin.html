@@ -12,6 +12,7 @@
 <header><div class="brand"><span class="mark">KR</span><span>KR Easy · Administração</span></div><button class="secondary hidden" id="logout">Sair</button></header>
 <section class="panel login" id="loginPanel"><h1>Acesso administrativo</h1><p class="muted">Entre com a senha administrativa configurada no servidor.</p><form id="loginForm"><label class="field"><span>Senha</span><input id="password" type="password" autocomplete="current-password" required></label><p class="error" id="loginError"></p><button type="submit">Entrar</button></form></section>
 <div id="dashboard" class="hidden">
+<p id="previewNotice" class="notice hidden" role="status">Prévia isolada: sem acesso ao Firebase de Produção. Os dados reais não aparecem aqui e ações de gravação ficam bloqueadas.</p>
 <section><h1>Painel do proprietário</h1><p class="muted">Indicadores do site, das compras confirmadas e do uso do app.</p></section>
 <section class="panel"><div class="grid">
 <div class="stat"><small>Compras confirmadas</small><strong id="purchases">—</strong></div>
@@ -73,10 +74,20 @@ async function loadSupportRequests() {
     error.textContent='';
   } catch(failure){ error.textContent=failure.message; }
 }
-async function refresh() {loadRefundRequests();loadSupportRequests();
+async function refresh() {
   try {
     const data = await api('/api/admin/dashboard');
     showLoggedIn(true);
+    const previewMode = data.previewMode === true;
+    $('#previewNotice').classList.toggle('hidden', !previewMode);
+    for (const control of document.querySelectorAll('#licenseForm input, #licenseForm select, #licenseForm button, #revokeLicenseForm input, #revokeLicenseForm button')) control.disabled = previewMode;
+    if (previewMode) {
+      $('#refundRequests').innerHTML = '<p class="muted">Solicitações não são carregadas na prévia.</p>';
+      $('#supportRequests').innerHTML = '<p class="muted">Chamados não são carregados na prévia.</p>';
+    } else {
+      loadRefundRequests();
+      loadSupportRequests();
+    }
     $('#purchases').textContent = data.totals.purchases;
     $('#revenue').textContent = money(data.totals.revenueCents);
     $('#grants').textContent = data.totals.ownerGrants;
