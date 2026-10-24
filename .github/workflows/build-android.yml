@@ -42,7 +42,7 @@ jobs:
       - name: Prepare Bubblewrap toolchain
         run: |
           mkdir -p ~/.bubblewrap
-          printf '{"jdkPath":"%s","androidSdkPath":"%s"}\\n' "$JAVA_HOME" "${ANDROID_HOME:-$ANDROID_SDK_ROOT}" > ~/.bubblewrap/config.json
+          printf '{"jdkPath":"%s","androidSdkPath":"%s"}\n' "$JAVA_HOME" "${ANDROID_HOME:-$ANDROID_SDK_ROOT}" > ~/.bubblewrap/config.json
 
       - name: Regenerate TWA with Play Billing
         working-directory: android-app
