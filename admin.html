@@ -113,13 +113,8 @@ async function refresh() {
     $('#previewNotice').classList.toggle('hidden', !previewMode);
     $('#resetPreviewDemo').classList.toggle('hidden', !previewMode);
     for (const control of document.querySelectorAll('#licenseForm input, #licenseForm select, #licenseForm button, #revokeLicenseForm input, #revokeLicenseForm button')) control.disabled = previewMode;
-    if (previewMode) {
-      loadRefundRequests();
-      loadSupportRequests();
-    } else {
-      loadRefundRequests();
-      loadSupportRequests();
-    }
+    loadRefundRequests();
+    loadSupportRequests();
     $('#purchases').textContent = data.totals.purchases;
     $('#revenue').textContent = money(data.totals.revenueCents);
     $('#grants').textContent = data.totals.ownerGrants;
