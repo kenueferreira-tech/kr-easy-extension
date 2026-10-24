@@ -12,7 +12,7 @@
 <header><div class="brand"><span class="mark">KR</span><span>KR Easy · Administração</span></div><button class="secondary hidden" id="logout">Sair</button></header>
 <section class="panel login" id="loginPanel"><h1>Acesso administrativo</h1><p class="muted">Entre com a senha administrativa configurada no servidor.</p><form id="loginForm"><label class="field"><span>Senha</span><input id="password" type="password" autocomplete="current-password" required></label><p class="error" id="loginError"></p><button type="submit">Entrar</button></form></section>
 <div id="dashboard" class="hidden">
-<p id="previewNotice" class="notice hidden" role="status">Prévia isolada: sem acesso ao Firebase de Produção. Os dados reais não aparecem aqui e ações de gravação ficam bloqueadas.</p>
+<p id="previewNotice" class="notice hidden" role="status">Prévia isolada: sem acesso ao Firebase de Produção. As solicitações abaixo são fictícias; mudanças de status ficam só neste navegador. Licenças não podem ser criadas ou revogadas.</p><button type="button" class="secondary hidden" id="resetPreviewDemo">Reiniciar demonstração</button>
 <section><h1>Painel do proprietário</h1><p class="muted">Indicadores do site, das compras confirmadas e do uso do app.</p></section>
 <section class="panel"><div class="grid">
 <div class="stat"><small>Compras confirmadas</small><strong id="purchases">—</strong></div>
@@ -31,6 +31,37 @@
 (() => {
 const $ = selector => document.querySelector(selector);
 const loginPanel = $('#loginPanel'), dashboard = $('#dashboard'), logout = $('#logout');
+let previewMode = false;
+const PREVIEW_DEMO_KEY = 'kr-admin-preview-demo-v1';
+function previewDemoState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PREVIEW_DEMO_KEY) || 'null');
+    if (saved && Array.isArray(saved.refunds) && Array.isArray(saved.support)) return saved;
+  } catch {}
+  const now = Date.now();
+  const state = {
+    refunds: [
+      { id: '11111111111111111111111111111111', status: 'recebido', reason: 'nao_funcionou', purchaseReference: 'KR-0000000000001-abcdef123456', referenceType: 'order', email: 'cliente-demo-1@example.test', details: 'Solicitação fictícia para testar o início da análise.', createdAt: new Date(now - 4 * 3600000).toISOString() },
+      { id: '22222222222222222222222222222222', status: 'em_analise', reason: 'compra_acidental', purchaseReference: 'KR-0000000000002-bcdefa123456', referenceType: 'order', email: 'cliente-demo-2@example.test', details: 'Solicitação fictícia já em análise.', createdAt: new Date(now - 2 * 86400000).toISOString() },
+      { id: '33333333333333333333333333333333', status: 'aprovado', reason: 'nao_era_o_esperado', purchaseReference: 'KR-0000000000003-cdefab123456', referenceType: 'order', email: 'cliente-demo-3@example.test', details: 'Solicitação fictícia aprovada; teste marcar o cancelamento solicitado.', createdAt: new Date(now - 3 * 86400000).toISOString() },
+      { id: '44444444444444444444444444444444', status: 'estorno_solicitado', reason: 'outro', purchaseReference: 'KR-0000000000004-defabc123456', referenceType: 'order', email: 'cliente-demo-4@example.test', details: 'Solicitação fictícia aguardando confirmação de cancelamento.', createdAt: new Date(now - 4 * 86400000).toISOString() }
+    ],
+    support: [
+      { id: 'demo-support-01', status: 'recebido', name: 'Cliente de demonstração', email: 'suporte-demo@example.test', category: 'problema_tecnico', subject: 'Chamado fictício de teste', message: 'Use este chamado para testar a mudança de status.', createdAt: new Date(now - 3600000).toISOString() }
+    ]
+  };
+  try { localStorage.setItem(PREVIEW_DEMO_KEY, JSON.stringify(state)); } catch {}
+  return state;
+}
+function updatePreviewDemo(collection, id, status) {
+  const state = previewDemoState();
+  const item = state[collection].find(entry => entry.id === id);
+  if (!item) return false;
+  item.status = status;
+  item.updatedAt = new Date().toISOString();
+  try { localStorage.setItem(PREVIEW_DEMO_KEY, JSON.stringify(state)); } catch { return false; }
+  return true;
+}
 const money = cents => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(cents/100);
 async function api(url, options={}) {
   const response = await fetch(url, {...options, credentials:'same-origin', headers:{'Content-Type':'application/json',...(options.headers||{})}});
@@ -42,7 +73,7 @@ function showLoggedIn(value) { loginPanel.classList.toggle('hidden',value); dash
 async function loadRefundRequests() {
   const list=$('#refundRequests'), error=$('#refundError');
   try {
-    const data=await api('/api/admin/refunds');
+    const data=previewMode ? {requests:previewDemoState().refunds} : await api('/api/admin/refunds');
     const labels={recebido:'Recebido',em_analise:'Em análise',aprovado:'Aprovado para executar',negado:'Não aprovado',estorno_solicitado:'Cancelamento solicitado',reembolsado:'Cancelamento confirmado'};
     const reasons={compra_acidental:'Compra por engano',nao_funcionou:'Não funcionou como esperado',nao_era_o_esperado:'Não era o esperado',outro:'Outro motivo'};
     const actions={recebido:[['em_analise','Iniciar análise'],['negado','Não aprovar']],em_analise:[['aprovado','Aprovar para executar'],['negado','Não aprovar']],aprovado:[['estorno_solicitado','Marcar cancelamento solicitado'],['negado','Não aprovar']],estorno_solicitado:[['reembolsado','Confirmar cancelamento concluído']],negado:[['em_analise','Reabrir análise']],reembolsado:[]};
@@ -59,7 +90,7 @@ async function loadRefundRequests() {
 async function loadSupportRequests() {
   const list=$('#supportRequests'), error=$('#supportError');
   try {
-    const data=await api('/api/admin/refunds?type=support');
+    const data=previewMode ? {requests:previewDemoState().support} : await api('/api/admin/refunds?type=support');
     const labels={recebido:'Novo',em_atendimento:'Em atendimento',resolvido:'Resolvido'};
     const categories={instalacao:'Instalação',licenca:'Licença',pagamento:'Pagamento',problema_tecnico:'Problema técnico',outro:'Outro'};
     const actions={recebido:[['em_atendimento','Iniciar atendimento'],['resolvido','Marcar resolvido']],em_atendimento:[['resolvido','Marcar resolvido'],['recebido','Reabrir']],resolvido:[['em_atendimento','Reabrir atendimento']]};
@@ -78,12 +109,13 @@ async function refresh() {
   try {
     const data = await api('/api/admin/dashboard');
     showLoggedIn(true);
-    const previewMode = data.previewMode === true;
+    previewMode = data.previewMode === true;
     $('#previewNotice').classList.toggle('hidden', !previewMode);
+    $('#resetPreviewDemo').classList.toggle('hidden', !previewMode);
     for (const control of document.querySelectorAll('#licenseForm input, #licenseForm select, #licenseForm button, #revokeLicenseForm input, #revokeLicenseForm button')) control.disabled = previewMode;
     if (previewMode) {
-      $('#refundRequests').innerHTML = '<p class="muted">Solicitações não são carregadas na prévia.</p>';
-      $('#supportRequests').innerHTML = '<p class="muted">Chamados não são carregados na prévia.</p>';
+      loadRefundRequests();
+      loadSupportRequests();
     } else {
       loadRefundRequests();
       loadSupportRequests();
@@ -122,14 +154,29 @@ $('#licenseForm').addEventListener('submit',async event=>{event.preventDefault()
 $('#refundRequests').addEventListener('click',async event=>{
   const button=event.target.closest('.refund-action');if(!button)return;
   const status=button.dataset.status;
-  if(status==='reembolsado'&&!confirm('Só confirme depois que a InfinitePay mostrar o cancelamento concluído. A licença ficará inativa.'))return;
+  if(status==='reembolsado') {
+    const message=previewMode
+      ? 'Simular esta etapa? Isso só altera o exemplo neste navegador; não solicita estorno nem revoga licença.'
+      : 'Só confirme depois que a InfinitePay mostrar o cancelamento concluído. A licença ficará inativa.';
+    if(!confirm(message))return;
+  }
   button.disabled=true;$('#refundError').textContent='';
+  if(previewMode) {
+    if(!updatePreviewDemo('refunds',button.dataset.id,status)) $('#refundError').textContent='Não consegui salvar a simulação neste navegador.';
+    await loadRefundRequests();
+    return;
+  }
   try{await api('/api/admin/refunds',{method:'PATCH',body:JSON.stringify({id:button.dataset.id,status})});await loadRefundRequests();}
   catch(failure){$('#refundError').textContent=failure.message;button.disabled=false;}
 });
 $('#supportRequests').addEventListener('click',async event=>{
   const button=event.target.closest('.support-action');if(!button)return;
   button.disabled=true;$('#supportError').textContent='';
+  if(previewMode) {
+    if(!updatePreviewDemo('support',button.dataset.id,button.dataset.status)) $('#supportError').textContent='Não consegui salvar a simulação neste navegador.';
+    await loadSupportRequests();
+    return;
+  }
   try{await api('/api/admin/refunds?type=support',{method:'PATCH',body:JSON.stringify({id:button.dataset.id,status:button.dataset.status})});await loadSupportRequests();}
   catch(failure){$('#supportError').textContent=failure.message;button.disabled=false;}
 });
@@ -148,6 +195,11 @@ $('#revokeLicenseForm').addEventListener('submit',async event=>{
   finally{button.disabled=false;}
 });
 $('#copyKey').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#newKey').textContent);$('#copyKey').textContent='Copiada';setTimeout(()=>$('#copyKey').textContent='Copiar chave',1500);}catch{}});
+$('#resetPreviewDemo').addEventListener('click',()=>{
+  try { localStorage.removeItem(PREVIEW_DEMO_KEY); } catch {}
+  loadRefundRequests();
+  loadSupportRequests();
+});
 window.addEventListener('resize',()=>{if(!dashboard.classList.contains('hidden'))refresh();});
 api('/api/admin/auth').then(state=>state.authenticated?refresh():showLoggedIn(false)).catch(()=>showLoggedIn(false));
 })();
