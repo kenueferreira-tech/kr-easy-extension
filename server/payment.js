@@ -27,9 +27,11 @@ async function confirmPayment(data) {
   if (!fields.every(field => typeof data[field] === 'string' && data[field].length > 0)) throw new Error('Dados do pagamento incompletos.');
   if (!data.order_nsu.startsWith('kr-')) throw new Error('Pedido inválido.');
 
+  const apiKey = process.env.INFINITEPAY_API_KEY;
+  if (!apiKey) throw new Error('A confirmação de pagamento está em configuração.');
   const checkResponse = await fetch(PAYMENT_CHECK_API, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey },
     body: JSON.stringify({ handle: HANDLE, order_nsu: data.order_nsu, transaction_nsu: data.transaction_nsu, slug: data.slug }),
     signal: AbortSignal.timeout(12000)
   });
