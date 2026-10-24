@@ -33,15 +33,15 @@ jobs:
         with:
           node-version: 20
 
-      - name: Regenerate TWA with Play Billing
-        working-directory: android-app
-        run: npx --yes @bubblewrap/cli update --appVersionName=1.2.0
-
       - name: Set up Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
+
+      - name: Regenerate TWA with Play Billing
+        working-directory: android-app
+        run: npx --yes @bubblewrap/cli update --appVersionName=1.2.0
 
       - name: Restore signing key
         env:
