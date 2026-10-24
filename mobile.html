@@ -35,7 +35,7 @@
 
     <nav class="bottom-nav" aria-label="Navegação principal"><button class="nav-button active" data-nav="home"><span class="nav-icon">⌂</span>Início</button><button class="nav-button" data-nav="generator"><span class="nav-icon">✦</span>Gerador</button><button class="nav-button" data-nav="scripts"><span class="nav-icon">▤</span>Scripts</button><button class="nav-button" data-nav="profile"><span class="nav-icon">●</span>Licença</button></nav>
 
-    <section class="lock-overlay" id="lockOverlay"><div class="lock-box"><span class="logo">KR</span><span class="eyebrow">Acesso protegido</span><h1>Ative sua licença</h1><p class="lead">Use a mesma chave recebida na compra para liberar o aplicativo.</p><form id="licenseForm"><label class="field"><span>Chave de licença</span><input id="licenseKey" maxlength="80" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Digite sua chave" required></label><button class="primary" type="submit">Ativar acesso</button><p class="error" id="licenseError" role="alert"></p></form><p class="subtle">Sua chave fica armazenada somente neste aparelho.</p></div></section>
+    <section class="lock-overlay" id="lockOverlay"><div class="lock-box"><span class="logo">KR</span><span class="eyebrow">Acesso protegido</span><h1>Ative sua licença</h1><p class="lead">Use a mesma chave recebida na compra para liberar o aplicativo.</p><form id="licenseForm"><label class="field"><span>Chave de licença</span><input id="licenseKey" maxlength="80" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Digite sua chave" required></label><button class="primary" type="submit">Ativar acesso</button><p class="error" id="licenseError" role="alert"></p></form><p class="subtle">Sua chave fica salva neste aparelho para manter o acesso. A ativação dos dispositivos é verificada com segurança.</p><section id="playPurchasePanel" class="card" style="margin-top:22px" hidden><h2>Não tem uma licença?</h2><p class="subtle">Compre o acesso vitalício pelo Google Play. O valor final é exibido e cobrado pela Play Store.</p><button class="primary" id="playPurchaseButton" type="button" disabled>Comprar acesso — R$ 50,00</button><button class="secondary" id="restorePurchaseButton" type="button" style="margin-top:10px">Restaurar compra</button><p class="subtle" id="playPurchaseStatus" role="status" style="margin-bottom:0">Preparando compra segura pelo Google Play…</p><p class="error" id="playPurchaseError" role="alert"></p></section></div></section>
 
     <div class="modal" id="messageModal" role="dialog" aria-modal="true" aria-labelledby="messageTitle"><div class="sheet"><div class="sheet-handle"></div><h2 id="messageTitle">Mensagem preparada</h2><p class="subtle">Você pode ajustar o texto antes de abrir o WhatsApp.</p><textarea class="message" id="modalMessage" aria-label="Mensagem preparada"></textarea><button class="primary" id="modalWhatsApp" type="button">Copiar e Abrir WhatsApp</button><button class="secondary" id="modalCopy" type="button">Somente copiar</button><button class="secondary" id="closeModal" type="button">Voltar</button></div></div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -49,6 +49,10 @@
       const LICENSE_STORAGE_KEY = 'krEasyLicense';
       const SCRIPTS_STORAGE_KEY = 'krEasyMobileScripts';
       const LICENSE_CACHE_MS = 86400000;
+      const PLAY_PRODUCT_ID = 'kr_easy_access_lifetime';
+      const PLAY_BILLING_METHOD = 'https://play.google.com/billing';
+      let playBillingService = null;
+      let playProductDetails = null;
       const QUICK_SCRIPTS = {
         caro: 'Entendo você 😊 Mais importante do que olhar apenas o preço é avaliar o resultado que você busca. Posso te mostrar rapidamente o que está incluído e como esse investimento pode fazer sentido para você?',
         pensar: 'Claro, é importante decidir com segurança 😊 Para eu não deixar nenhuma dúvida pendente: o que você gostaria de avaliar melhor antes de tomar sua decisão?',
@@ -93,6 +97,131 @@
         if (!record || (record.status !== 'ativa' && record.active !== true)) return { ok: false, message: 'Chave inválida, inativa ou não encontrada.' };
         if (record.expiresAt && Date.now() > new Date(record.expiresAt).getTime()) return { ok: false, message: 'Esta licença expirou.' };
         return { ok: true, record };
+      }
+
+      function formatPlayPrice(price) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: price.currency }).format(Number(price.value));
+      }
+
+      async function verifyPlayPurchase(purchaseToken, productId = PLAY_PRODUCT_ID) {
+        const response = await fetch('/api/google-play-purchase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store',
+          body: JSON.stringify({ purchaseToken, productId })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.paid || !data.license) {
+          throw new Error(data.error || 'Não foi possível confirmar a compra com o Google Play.');
+        }
+        return data.license;
+      }
+
+      async function activatePurchasedLicense(key) {
+        $('#licenseKey').value = key;
+        const result = await validateLicense(key);
+        if (!result.ok) throw new Error('A compra foi confirmada, mas a licença ainda não apareceu. Toque em Restaurar compra para tentar novamente.');
+        await KRDevices.register(key, 'mobile');
+        const saved = { key, validatedAt: Date.now() };
+        writeJSON(LICENSE_STORAGE_KEY, saved);
+        unlock(saved);
+        $('#playPurchaseError').textContent = '';
+        notify('Compra confirmada. Seu acesso está ativo.');
+      }
+
+      async function restoreGooglePlayPurchase(silent = false) {
+        const button = $('#restorePurchaseButton');
+        const status = $('#playPurchaseStatus');
+        $('#playPurchaseError').textContent = '';
+        if (!playBillingService) {
+          if (!silent) $('#playPurchaseError').textContent = 'O faturamento do Google Play não está disponível nesta versão do app.';
+          return false;
+        }
+        button.disabled = true;
+        try {
+          const purchases = await playBillingService.listPurchases();
+          const purchase = purchases.find(item => item.itemId === PLAY_PRODUCT_ID);
+          if (!purchase) {
+            if (!silent) $('#playPurchaseError').textContent = 'Não encontrei uma compra do KR Easy nesta conta Google Play.';
+            return false;
+          }
+          const key = await verifyPlayPurchase(purchase.purchaseToken, purchase.itemId);
+          await activatePurchasedLicense(key);
+          status.textContent = 'Compra restaurada com sucesso.';
+          return true;
+        } catch (error) {
+          if (!silent) $('#playPurchaseError').textContent = error.message || 'Não foi possível restaurar a compra.';
+          return false;
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      async function initializePlayBilling() {
+        const panel = $('#playPurchasePanel');
+        if (!IS_PLAY_APP) return;
+        panel.hidden = false;
+        const button = $('#playPurchaseButton');
+        const status = $('#playPurchaseStatus');
+        if (!('getDigitalGoodsService' in window)) {
+          status.textContent = 'Atualize o app pela Play Store para habilitar a compra segura.';
+          return;
+        }
+        try {
+          playBillingService = await window.getDigitalGoodsService(PLAY_BILLING_METHOD);
+          const details = await playBillingService.getDetails([PLAY_PRODUCT_ID]);
+          playProductDetails = details.find(item => item.itemId === PLAY_PRODUCT_ID);
+          if (!playProductDetails) {
+            status.textContent = 'O produto de compra está sendo configurado no Google Play.';
+            return;
+          }
+          button.textContent = `Comprar acesso vitalício — ${formatPlayPrice(playProductDetails.price)}`;
+          button.disabled = false;
+          status.textContent = 'Pagamento processado com segurança pelo Google Play.';
+          if (!readJSON(LICENSE_STORAGE_KEY, null)) await restoreGooglePlayPurchase(true);
+        } catch {
+          status.textContent = 'Atualize o app pela Play Store para habilitar a compra segura.';
+        }
+      }
+
+      async function purchaseWithGooglePlay() {
+        const button = $('#playPurchaseButton');
+        const errorBox = $('#playPurchaseError');
+        errorBox.textContent = '';
+        if (!playBillingService || !playProductDetails) {
+          errorBox.textContent = 'A compra pelo Google Play ainda não está disponível nesta versão.';
+          return;
+        }
+        button.disabled = true;
+        const originalLabel = button.textContent;
+        button.textContent = 'Abrindo Google Play…';
+        let paymentResponse;
+        try {
+          const request = new PaymentRequest([{
+            supportedMethods: PLAY_BILLING_METHOD,
+            data: { sku: PLAY_PRODUCT_ID }
+          }], {
+            total: { label: 'KR Easy Extension', amount: { currency: 'BRL', value: '0' } }
+          });
+          paymentResponse = await request.show();
+          const purchaseToken = paymentResponse.details && paymentResponse.details.purchaseToken;
+          if (!purchaseToken) throw new Error('O Google Play não retornou um comprovante válido.');
+          button.textContent = 'Confirmando pagamento…';
+          const license = await verifyPlayPurchase(purchaseToken);
+          await paymentResponse.complete('success');
+          await activatePurchasedLicense(license);
+        } catch (error) {
+          if (paymentResponse) {
+            try { await paymentResponse.complete('fail'); } catch {}
+          }
+          if (error.name !== 'AbortError') {
+            errorBox.textContent = error.message || 'Não foi possível concluir a compra.';
+            if (/compra foi confirmada/i.test(error.message || '')) $('#licenseKey').value = '';
+          }
+        } finally {
+          button.disabled = false;
+          button.textContent = originalLabel;
+        }
       }
 
       function unlock(saved) {
@@ -164,6 +293,9 @@
         $('#generatedText').value = STAGES[$('#stage').value](data); $('#generatorOutput').hidden = false; $('#generatorOutput').scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
 
+      $('#playPurchaseButton').addEventListener('click', purchaseWithGooglePlay);
+      $('#restorePurchaseButton').addEventListener('click', () => restoreGooglePlayPurchase(false));
+
       $('#licenseForm').addEventListener('submit', async event => {
         event.preventDefault(); const button = event.currentTarget.querySelector('button'); const key = normalizeKey($('#licenseKey').value);
         if (key.length < 8) return $('#licenseError').textContent = 'Confira a chave informada e tente novamente.';
@@ -194,6 +326,7 @@
       }
       renderScripts();
       bootLicense();
+      initializePlayBilling();
     })();
   </script>
   <script src="/mobile-features.js"></script>
