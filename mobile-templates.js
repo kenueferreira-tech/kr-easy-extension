@@ -6,7 +6,7 @@
   const message = document.querySelector('#modalMessage');
   if (!scriptsList || !modal || !message) return;
 
-  const escapeRegExp = value => value.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&');
+  const escapeRegExp = value => [...value].map(char => '.*+?^$'.includes(char) || '{}()|[]\\'.includes(char) ? '\\' + char : char).join('');
   const variablePattern = /\{([\p{L}\p{N}_ -]{1,40})\}/gu;
   const fieldLabel = value => value.replace(/[_-]+/g, ' ').trim().replace(/\s+/g, ' ');
 
@@ -49,7 +49,7 @@
       input.type = 'text';
       input.maxLength = 180;
       input.autocomplete = 'off';
-      input.placeholder = \`Preencha: \${fieldLabel(name)}\`;
+      input.placeholder = 'Preencha: ' + fieldLabel(name);
       input.dataset.templateVariable = name;
       label.append(caption, input);
       container.append(label);
@@ -59,8 +59,8 @@
     const updateMessage = () => {
       let output = template;
       for (const input of inputs) {
-        const expression = new RegExp('\\\\{' + escapeRegExp(input.dataset.templateVariable) + '\\\\}', 'giu');
-        output = output.replace(expression, () => input.value.trim() || \`{\${input.dataset.templateVariable}}\`);
+        const expression = new RegExp('\\{' + escapeRegExp(input.dataset.templateVariable) + '\\}', 'giu');
+        output = output.replace(expression, () => input.value.trim() || '{' + input.dataset.templateVariable + '}');
       }
       message.value = output;
     };
