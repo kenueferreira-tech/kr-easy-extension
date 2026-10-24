@@ -39,6 +39,10 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Configure Bubblewrap toolchain
+        working-directory: android-app
+        run: npx --yes @bubblewrap/cli updateConfig --jdkPath="$JAVA_HOME" --androidSdkPath="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+
       - name: Regenerate TWA with Play Billing
         working-directory: android-app
         run: npx --yes @bubblewrap/cli update --appVersionName=1.2.0
