@@ -39,12 +39,17 @@ async function confirmPayment(data) {
   const license = createLicense(data.transaction_nsu);
   const licenseHash = crypto.createHash('sha256').update(license).digest('hex');
   const database = getDatabase();
-  await database.ref(`licenses/${licenseHash}`).set({
+  const captureMethod = check.capture_method || data.capture_method || 'unknown';
+  const result = await database.ref(`licenses/${licenseHash}`).transaction(current => current || {
     status: 'ativa', plan: 'basico', access: 'vitalicio', deviceLimit: 2, createdAt: new Date().toISOString(),
-    orderNsu: data.order_nsu, transactionNsu: data.transaction_nsu,
-    captureMethod: check.capture_method || data.capture_method || 'unknown'
+    orderNsu: data.order_nsu, transactionNsu: data.transaction_nsu, captureMethod
   });
-  return { license, captureMethod: check.capture_method || data.capture_method || 'unknown' };
+  const stored = result.snapshot.val();
+  if (!stored || (stored.status !== 'ativa' && stored.active !== true)) {
+    throw new Error('Pagamento confirmado, mas a licença está inativa. Entre em contato com o suporte.');
+  }
+
+  return { license, captureMethod: stored.captureMethod || captureMethod };
 }
 
 module.exports = { confirmPayment };
