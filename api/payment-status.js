@@ -1,8 +1,6 @@
 const { confirmPayment } = require('../server/payment');
 
 module.exports = async function handler(request, response) {
-  if (process.env.VERCEL_ENV === 'preview') return response.status(403).json({ paid: false, error: 'Pagamentos estão desativados na prévia.' });
-
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST');
     return response.status(405).json({ error: 'Método não permitido.' });

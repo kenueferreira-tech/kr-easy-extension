@@ -1,8 +1,6 @@
 const { registerDevice, listDevices, removeDevice, MAX_DEVICES } = require('../server/devices');
 
 module.exports = async (request, response) => {
-  if (process.env.VERCEL_ENV === 'preview') return response.status(403).json({ error: 'Gerenciamento de dispositivos está desativado na prévia.' });
-
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');

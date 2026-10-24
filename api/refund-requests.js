@@ -14,8 +14,6 @@ function sameOrigin(request) {
 }
 
 module.exports = async (request, response) => {
-  if (process.env.VERCEL_ENV === 'preview') return response.status(403).json({ error: 'Envio de solicitações está desativado na prévia.' });
-
   response.setHeader('Cache-Control', 'no-store');
   response.setHeader('X-Content-Type-Options', 'nosniff');
   if (request.method !== 'POST') {
