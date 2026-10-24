@@ -4,6 +4,8 @@ const allowedEvents = new Set(['site_view']);
 const allowedSource = value => /^[a-z0-9_-]{1,32}$/.test(String(value || '')) ? String(value) : 'direct';
 
 module.exports = async (request, response) => {
+  if (process.env.VERCEL_ENV === 'preview') return response.status(204).end();
+
   response.setHeader('Cache-Control', 'no-store');
   if (request.method !== 'POST') return response.status(405).json({ error: 'Método não permitido.' });
   const origin = request.headers.origin;
