@@ -17,6 +17,11 @@
       ".indexOn": [
         "createdAt"
       ]
+    },
+    "refundRequests": {
+      ".indexOn": [
+        "createdAt"
+      ]
     }
   }
 }
