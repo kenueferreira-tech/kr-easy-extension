@@ -14,9 +14,9 @@ function fail(code, status, message) {
   return error;
 }
 
-function readJsonEnv(name) {
+function readJsonEnv(name, fallbackName = null) {
   try {
-    const value = process.env[name];
+    const value = process.env[name] || (fallbackName ? process.env[fallbackName] : null);
     if (!value) throw new Error('missing');
     return JSON.parse(value);
   } catch {
@@ -53,7 +53,7 @@ function base64Url(value) {
 }
 
 async function getPublisherAccessToken() {
-  const credentials = readJsonEnv('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON');
+  const credentials = readJsonEnv('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON', 'FIREBASE_SERVICE_ACCOUNT_JSON');
   if (!credentials.client_email || !credentials.private_key) {
     throw fail('BILLING_SETUP', 503, 'A compra pelo Google Play ainda está sendo configurada.');
   }
