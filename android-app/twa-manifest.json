@@ -61,7 +61,7 @@
   "isChromeOSOnly": false,
   "isMetaQuest": false,
   "fullScopeUrl": "https://kr-easy-extension.vercel.app/",
-  "minSdkVersion": 23,
+  "minSdkVersion": 24,
   "orientation": "portrait",
   "fingerprints": [],
   "additionalTrustedOrigins": [],
