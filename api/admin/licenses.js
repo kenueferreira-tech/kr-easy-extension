@@ -4,6 +4,9 @@ module.exports = async (request, response) => {
   response.setHeader('Cache-Control', 'no-store');
   if (!['POST', 'DELETE'].includes(request.method)) { response.setHeader('Allow', 'POST, DELETE'); return response.status(405).json({ error: 'Método não permitido.' }); }
   if (!await requireAdmin(request, response)) return;
+  if (process.env.VERCEL_ENV === 'preview') {
+    return response.status(403).json({ ok: false, error: 'A prévia está isolada e não permite criar ou revogar licenças.' });
+  }
   try {
     if (request.method === 'DELETE') {
       const result = await revokeLicense(request.body && request.body.key);
