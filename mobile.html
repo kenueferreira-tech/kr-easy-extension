@@ -216,7 +216,6 @@
           }
           if (error.name !== 'AbortError') {
             errorBox.textContent = error.message || 'Não foi possível concluir a compra.';
-            if (/compra foi confirmada/i.test(error.message || '')) $('#licenseKey').value = '';
           }
         } finally {
           button.disabled = false;
