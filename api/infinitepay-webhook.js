@@ -1,6 +1,8 @@
 const { confirmPayment } = require('../server/payment');
 
 module.exports = async function handler(request, response) {
+  if (process.env.VERCEL_ENV === 'preview') return response.status(403).json({ received: false });
+
   if (request.method !== 'POST') return response.status(405).end();
   try {
     const body = request.body || {};
