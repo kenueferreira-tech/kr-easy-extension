@@ -120,18 +120,22 @@ async function revokeLicense(key) {
     ? 'KREASY-' + compactKey.slice(6, 10) + '-' + compactKey.slice(10, 14) + '-' + compactKey.slice(14, 18)
     : cleanedKey;
   if (normalizedKey.length < 8 || normalizedKey.length > 80) throw new Error('Digite a chave completa da licença.');
-  const hash = sha256(normalizedKey);
-  const ref = database().ref('licenses/' + hash);
+
+  const ref = database().ref('licenses/' + sha256(normalizedKey));
+  const existing = await ref.get();
+  if (!existing.exists()) throw new Error('Não encontrei uma licença com essa chave.');
+
   const revokedAt = new Date().toISOString();
+  if (existing.val().status === 'inativa') return { ok: true, alreadyInactive: true };
   const result = await ref.transaction(current => {
     if (!current) return;
     if (current.status === 'inativa') return current;
     return { ...current, status: 'inativa', active: false, revokedAt, revokedBy: 'owner_admin' };
   });
-  if (!result.committed || !result.snapshot.exists()) throw new Error('Não encontrei uma licença com essa chave.');
-  return { ok: true, alreadyInactive: result.snapshot.val().revokedAt !== revokedAt };
+  if (!result.snapshot.exists()) throw new Error('A licença não pôde ser revogada. Tente novamente.');
+  const record = result.snapshot.val();
+  return { ok: true, alreadyInactive: record.revokedAt !== revokedAt };
 }
-
 
 async function readDashboard() {
   const db = database();
