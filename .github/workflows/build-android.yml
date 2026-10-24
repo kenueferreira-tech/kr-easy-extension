@@ -3,9 +3,10 @@ name: Build Android AAB
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feature/google-play-purchase]
     paths:
       - "android-app-source.zip"
+      - "android-app/twa-manifest.json"
       - ".github/workflows/build-android.yml"
 
 permissions:
@@ -18,8 +19,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Preserve Bubblewrap manifest
+        run: cp android-app/twa-manifest.json /tmp/kr-easy-twa-manifest.json
+
       - name: Restore Android project
         run: unzip -qo android-app-source.zip -d android-app
+
+      - name: Restore current Bubblewrap manifest
+        run: cp /tmp/kr-easy-twa-manifest.json android-app/twa-manifest.json
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Regenerate TWA with Play Billing
+        working-directory: android-app
+        run: npx --yes @bubblewrap/cli update --appVersionName=1.2.0
 
       - name: Set up Java
         uses: actions/setup-java@v5
@@ -49,7 +65,7 @@ jobs:
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: KR-Easy-Extension-v1.1.0-AAB
+          name: KR-Easy-Extension-v1.2.0-AAB
           path: android-app/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
