@@ -114,7 +114,11 @@ async function createOwnerLicense({ kind, note }) {
 }
 
 async function revokeLicense(key) {
-  const normalizedKey = String(key || '').trim().toUpperCase().replace(/\\s+/g, '');
+  const cleanedKey = String(key || '').normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/[‐‑‒–—−]/g, '-').trim().toUpperCase().replace(/\s+/g, '');
+  const compactKey = cleanedKey.replace(/-/g, '');
+  const normalizedKey = /^KREASY[A-Z2-9]{12}$/.test(compactKey)
+    ? 'KREASY-' + compactKey.slice(6, 10) + '-' + compactKey.slice(10, 14) + '-' + compactKey.slice(14, 18)
+    : cleanedKey;
   if (normalizedKey.length < 8 || normalizedKey.length > 80) throw new Error('Digite a chave completa da licença.');
   const hash = sha256(normalizedKey);
   const ref = database().ref('licenses/' + hash);
