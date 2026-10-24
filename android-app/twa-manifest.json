@@ -25,15 +25,15 @@
   "shortcuts": [
     {
       "name": "Scripts rápidos",
-      "short_name": "Scripts",
+      "shortName": "Scripts",
       "url": "https://kr-easy-extension.vercel.app/mobile.html?source=play&screen=scripts",
-      "icon": "shortcut_scripts"
+      "chosenIconUrl": "https://kr-easy-extension.vercel.app/icons/icon-192.png"
     },
     {
       "name": "Gerar mensagem",
-      "short_name": "Gerador",
+      "shortName": "Gerador",
       "url": "https://kr-easy-extension.vercel.app/mobile.html?source=play&screen=generator",
-      "icon": "shortcut_generator"
+      "chosenIconUrl": "https://kr-easy-extension.vercel.app/icons/icon-192.png"
     }
   ],
   "shareTarget": {
