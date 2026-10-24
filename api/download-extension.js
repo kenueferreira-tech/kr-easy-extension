@@ -13,6 +13,8 @@ function getDatabase() {
 }
 
 module.exports = async function handler(request, response) {
+  if (process.env.VERCEL_ENV === 'preview') return response.status(403).json({ error: 'Downloads estão desativados na prévia.' });
+
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST');
     return response.status(405).json({ error: 'Método não permitido.' });

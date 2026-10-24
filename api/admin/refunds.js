@@ -7,10 +7,9 @@ const { listSupportRequests, updateSupportRequest } = require('../../server/supp
 module.exports = async (request, response) => {
   response.setHeader('Cache-Control', 'no-store');
   if (!await requireAdmin(request, response)) return;
-  if (process.env.VERCEL_ENV === 'preview') {
-    if (request.method === 'GET') return response.status(200).json({ requests: [] });
+  if (process.env.VERCEL_ENV === 'preview' && request.method !== 'GET') {
     response.setHeader('Allow', 'GET');
-    return response.status(403).json({ error: 'A prévia está isolada e não permite alterar solicitações.' });
+    return response.status(403).json({ error: 'A prévia está em modo somente leitura.' });
   }
   try {
     const support = request.query && request.query.type === 'support';
