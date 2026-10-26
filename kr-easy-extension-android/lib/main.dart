@@ -416,9 +416,20 @@ class _KrHomeState extends State<KrHome> {
           leading: Icon(r['done'] == true ? Icons.check_circle : Icons.alarm, color: _green),
           title: Text('${r['title']}'),
           subtitle: Text(_formatReminderTime(r)),
-          trailing: IconButton(
-            onPressed: () => _toggleReminderDone(r),
-            icon: Icon(r['done'] == true ? Icons.undo : Icons.check),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: r['done'] == true ? 'Reabrir lembrete' : 'Marcar como concluído',
+                onPressed: () => _toggleReminderDone(r),
+                icon: Icon(r['done'] == true ? Icons.undo : Icons.check),
+              ),
+              IconButton(
+                tooltip: 'Excluir lembrete',
+                onPressed: () => _deleteReminder(r),
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              ),
+            ],
           ),
         ),
       );
@@ -547,6 +558,31 @@ class _KrHomeState extends State<KrHome> {
       }
     } catch (error) { _snack('Não foi possível atualizar o aviso: $error'); }
     await _save();
+  }
+
+  Future<void> _deleteReminder(Map<String, dynamic> reminder) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir lembrete?'),
+        content: Text('“${reminder['title']}” e o aviso agendado serão removidos deste aparelho.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Excluir')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final id = int.tryParse('${reminder['notificationId'] ?? ''}');
+    try {
+      if (id != null) await _reminderNotifications.cancel(id);
+      if (!mounted) return;
+      setState(() => _reminders.remove(reminder));
+      await _save();
+      _snack('Lembrete excluído.');
+    } catch (error) {
+      _snack('Não foi possível excluir o lembrete: $error');
+    }
   }
 
   void _changeStage(Map<String, dynamic> c) { final stages = ['Novo', 'Contato', 'Negociação', 'Venda']; final next = (stages.indexOf('${c['stage']}') + 1) % stages.length; setState(() { c['stage'] = stages[next]; c['updated'] = DateTime.now().toIso8601String().substring(0,10); }); _save(); }
