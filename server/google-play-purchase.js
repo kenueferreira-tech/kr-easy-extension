@@ -86,7 +86,7 @@ async function getPublisherAccessToken() {
   return result.access_token;
 }
 
-async function getPurchase(accessToken, productId, purchaseToken) {
+async function getPurchase(accessToken, productId, purchaseToken, serviceAccountEmail) {
   const url = `${PUBLISHER_URL}/applications/${PACKAGE_NAME}/purchases/products/${encodeURIComponent(productId)}/tokens/${encodeURIComponent(purchaseToken)}`;
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
@@ -94,6 +94,16 @@ async function getPurchase(accessToken, productId, purchaseToken) {
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
+    const apiError = result && typeof result.error === 'object' ? result.error : {};
+    const apiReason = Array.isArray(apiError.errors) && apiError.errors[0] && apiError.errors[0].reason
+      ? String(apiError.errors[0].reason).slice(0, 120)
+      : '';
+    console.error('Google Play Publisher API rejected purchase lookup', {
+      status: response.status,
+      statusText: response.statusText,
+      reason: apiReason,
+      serviceAccount: serviceAccountEmail || ''
+    });
     throw fail('PLAY_VERIFICATION_FAILED', 502, 'O Google Play ainda não confirmou esta compra. Tente restaurá-la em instantes.');
   }
   if (Number(result.purchaseState) !== 0) {
@@ -123,7 +133,7 @@ async function confirmPlayPurchase({ productId, purchaseToken }) {
 
   const firebaseCredentials = readJsonEnv('FIREBASE_SERVICE_ACCOUNT_JSON');
   const accessToken = await getPublisherAccessToken();
-  const purchase = await getPurchase(accessToken, PRODUCT_ID, purchaseToken);
+  const purchase = await getPurchase(accessToken, PRODUCT_ID, purchaseToken, readJsonEnv('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON', 'FIREBASE_SERVICE_ACCOUNT_JSON').client_email);
   const license = createLicenseKey(purchaseToken, firebaseCredentials);
   const licenseHash = sha256(license);
   const tokenHash = sha256(purchaseToken);
