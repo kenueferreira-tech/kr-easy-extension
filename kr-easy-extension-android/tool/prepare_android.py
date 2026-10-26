@@ -38,12 +38,12 @@ if 'isCoreLibraryDesugaringEnabled = true' not in gradle_content:
         'compileOptions {\n        isCoreLibraryDesugaringEnabled = true',
         1,
     )
-if 'coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:' not in gradle_content:
-    gradle_content = gradle_content.replace(
-        'dependencies {',
-        'dependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")',
-        1,
-    )
+if 'coreLibraryDesugaring(' not in gradle_content:
+    dependency = '    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n'
+    if 'dependencies {' in gradle_content:
+        gradle_content = gradle_content.replace('dependencies {', f'dependencies {{\n{dependency}', 1)
+    else:
+        gradle_content += f'\ndependencies {{\n{dependency}}}\n'
 gradle.write_text(gradle_content, encoding='utf-8')
 
 notification_icon = Path('android/app/src/main/res/drawable/kr_notification.xml')
