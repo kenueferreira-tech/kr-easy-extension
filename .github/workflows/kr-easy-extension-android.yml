@@ -4,7 +4,11 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'kr-easy-extension-android/**'
+      - 'kr-easy-extension-android/lib/**'
+      - 'kr-easy-extension-android/test/**'
+      - 'kr-easy-extension-android/pubspec.yaml'
+      - 'kr-easy-extension-android/assets/**'
+      - 'kr-easy-extension-android/tool/**'
       - '.github/workflows/kr-easy-extension-android.yml'
 
 permissions:
