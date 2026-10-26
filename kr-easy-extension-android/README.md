@@ -31,6 +31,7 @@ flutter build apk --debug
 - Abertura manual de conversa pelo link oficial `wa.me` e cópia de scripts.
 - Exportação de backup JSON para a área de transferência.
 - Dados comerciais persistidos localmente via `shared_preferences`.
+- Ícone oficial do KR Easy Extension nas dimensões launcher do Android.
 
 ## Proteção de dados
 

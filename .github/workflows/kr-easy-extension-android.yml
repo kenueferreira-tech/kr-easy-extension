@@ -35,6 +35,8 @@ jobs:
           cp -R /tmp/kr-test test
       - name: Install dependencies
         run: flutter pub get
+      - name: Generate KR Easy launcher icon
+        run: dart run flutter_launcher_icons
       - name: Analyze
         run: flutter analyze --no-pub
       - name: Unit tests
