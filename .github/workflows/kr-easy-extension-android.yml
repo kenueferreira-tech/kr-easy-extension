@@ -30,9 +30,10 @@ jobs:
           cp -R test /tmp/kr-test
           flutter create --platforms=android --org com.kenueferreira --project-name kr_easy_extension --overwrite .
           cp /tmp/kr-pubspec.yaml pubspec.yaml
-          rm -rf lib test
-          cp -R /tmp/kr-lib lib
-          cp -R /tmp/kr-test test
+          cp -R /tmp/kr-lib/. lib/
+          python3 -c "from pathlib import Path; Path('test/widget_test.dart').unlink(missing_ok=True)"
+          cp -R /tmp/kr-test/. test/
+          python3 tool/prepare_android.py
       - name: Install dependencies
         run: flutter pub get
       - name: Generate KR Easy launcher icon

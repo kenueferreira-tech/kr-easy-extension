@@ -2,16 +2,23 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'finance.dart';
+import 'licensing.dart';
 
 const _green = Color(0xFF35E879);
 const _bg = Color(0xFF07110B);
 const _panel = Color(0xFF101B14);
 
-void main() => runApp(const KrEasyApp());
+final _secureStorage = FlutterSecureStorage(aOptions: AndroidOptions(resetOnError: false, migrateWithBackup: true));
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const KrEasyApp());
+}
 
 class KrEasyApp extends StatelessWidget {
   const KrEasyApp({super.key});
@@ -60,37 +67,56 @@ class _KrHomeState extends State<KrHome> {
   final _academyAnswer = TextEditingController();
   String _assistantOutput = '';
   String _category = 'Todos';
+  final _licenseInput = TextEditingController();
+  final _licenseService = KrLicenseService(_secureStorage);
+  bool _licenseBusy = false;
+  bool _licenseSaved = false;
+  String _licenseStatus = 'Licença não verificada';
 
   @override
   void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     final p = await SharedPreferences.getInstance();
+    final lists = <String, List<Map<String, dynamic>>>{};
+    for (final key in ['clients', 'products', 'reminders', 'scripts']) {
+      var stored = await _secureStorage.read(key: 'kr_data_$key');
+      if (stored == null) {
+        stored = p.getString(key);
+        if (stored != null) {
+          await _secureStorage.write(key: 'kr_data_$key', value: stored);
+          await p.remove(key);
+        }
+      }
+      lists[key] = _decodeList(stored);
+    }
+    final licenseKey = await _licenseService.getStoredKey();
     setState(() {
-      _clients = _readList(p, 'clients');
-      _products = _readList(p, 'products');
-      _reminders = _readList(p, 'reminders');
-      final stored = _readList(p, 'scripts');
+      _clients = lists['clients']!;
+      _products = lists['products']!;
+      _reminders = lists['reminders']!;
+      final stored = lists['scripts']!;
       if (stored.isNotEmpty) { _scripts.clear(); _scripts.addAll(stored); }
+      _licenseSaved = licenseKey != null;
+      _licenseStatus = licenseKey == null ? 'Licença não ativada neste aparelho' : 'Chave protegida salva · final ${licenseKey.substring(licenseKey.length - 4)}';
       _loading = false;
     });
   }
 
-  List<Map<String, dynamic>> _readList(SharedPreferences p, String key) {
-    try { return (jsonDecode(p.getString(key) ?? '[]') as List).map((e) => Map<String, dynamic>.from(e as Map)).toList(); }
+  List<Map<String, dynamic>> _decodeList(String? value) {
+    try { return (jsonDecode(value ?? '[]') as List).map((e) => Map<String, dynamic>.from(e as Map)).toList(); }
     catch (_) { return []; }
   }
 
   Future<void> _save() async {
-    final p = await SharedPreferences.getInstance();
-    await p.setString('clients', jsonEncode(_clients));
-    await p.setString('products', jsonEncode(_products));
-    await p.setString('reminders', jsonEncode(_reminders));
-    await p.setString('scripts', jsonEncode(_scripts));
+    await _secureStorage.write(key: 'kr_data_clients', value: jsonEncode(_clients));
+    await _secureStorage.write(key: 'kr_data_products', value: jsonEncode(_products));
+    await _secureStorage.write(key: 'kr_data_reminders', value: jsonEncode(_reminders));
+    await _secureStorage.write(key: 'kr_data_scripts', value: jsonEncode(_scripts));
   }
 
   @override
-  void dispose() { _search.dispose(); _assistantInput.dispose(); _academyAnswer.dispose(); super.dispose(); }
+  void dispose() { _search.dispose(); _assistantInput.dispose(); _academyAnswer.dispose(); _licenseInput.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +298,81 @@ class _KrHomeState extends State<KrHome> {
 
   Widget _integrations() => ListView(padding: const EdgeInsets.all(18), children: [_hero('Integrações', 'Ações manuais compatíveis com os aplicativos instalados no celular.'), const SizedBox(height: 12), _card(ListTile(leading: const Icon(Icons.chat, color: _green), title: const Text('WhatsApp'), subtitle: const Text('Abrir conversa por número informado'), onTap: _openWhatsApp)), _card(ListTile(leading: const Icon(Icons.share_outlined), title: const Text('Compartilhar script'), subtitle: const Text('Copie um script e cole no canal que você escolher'), onTap: () { _tab = 2; setState(() {}); })), const SizedBox(height: 12), const Text('Instagram e Facebook Messenger não têm automação conectada. A integração com APIs oficiais requer credenciais e configuração de backend.')]);
 
-  Widget _licensePage() => ListView(padding: const EdgeInsets.all(18), children: [_hero('Licença e acesso', 'O projeto atual valida chaves no Firebase Realtime Database.'), const SizedBox(height: 12), _card(const Text('Auditoria: o código web usa consulta por hash SHA-256 ao Firebase, mas a URL do banco aparece vazia nos arquivos consultados e não há autenticação de usuário dedicada para o Android. Não é seguro afirmar que a licença está conectada neste APK. Configure a URL pública de banco e uma validação server-side antes de ativar o acesso privado.'))]);
+  Widget _licensePage() => ListView(padding: const EdgeInsets.all(18), children: [
+        _hero('Licença e acesso', 'Ative o KR Easy Extension usando o serviço de dispositivos já existente.'),
+        const SizedBox(height: 12),
+        _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [const Icon(Icons.verified_user_outlined, color: _green), const SizedBox(width: 10), Expanded(child: Text(_licenseStatus, style: const TextStyle(fontWeight: FontWeight.w600)))]),
+          const SizedBox(height: 12),
+          if (!_licenseSaved) TextField(controller: _licenseInput, autocorrect: false, textCapitalization: TextCapitalization.characters, decoration: const InputDecoration(labelText: 'Chave de licença', hintText: 'KREASY-XXXX-XXXX-XXXX')),
+          if (!_licenseSaved) const Padding(padding: EdgeInsets.only(top: 10), child: Text('Ao tocar em Ativar, este aparelho será vinculado à licença. O limite atual é de 2 dispositivos, compartilhado com a extensão Chrome.', style: TextStyle(color: Colors.white70))),
+          const SizedBox(height: 14),
+          if (!_licenseSaved)
+            FilledButton.icon(onPressed: _licenseBusy ? null : _activateLicense, icon: _licenseBusy ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.key), label: const Text('Ativar neste aparelho'))
+          else ...[
+            FilledButton.icon(onPressed: _licenseBusy ? null : _verifyLicense, icon: const Icon(Icons.sync), label: const Text('Verificar com o servidor')),
+            TextButton.icon(onPressed: _licenseBusy ? null : _deactivateLicense, icon: const Icon(Icons.link_off), label: const Text('Desvincular este aparelho')),
+            TextButton(onPressed: _licenseBusy ? null : _clearSavedLicense, child: const Text('Remover chave salva deste aparelho')),
+          ],
+        ])),
+        _card(const Text('A verificação usa a API atual `/api/devices`, que confere a chave no servidor Firebase e aplica o limite existente. A chave é guardada no armazenamento seguro do Android. Não é criada licença de teste automaticamente; o acesso privado precisa ser gerado pelo painel administrativo.')),
+      ]);
+
+  Future<void> _activateLicense() async {
+    setState(() => _licenseBusy = true);
+    try {
+      final result = await _licenseService.activate(_licenseInput.text);
+      setState(() { _licenseSaved = true; _licenseStatus = 'Ativa neste aparelho · ${result.devices} de ${result.maxDevices} dispositivos vinculados'; });
+      _snack('Licença validada pelo servidor.');
+    } catch (error) {
+      _snack('$error');
+    } finally {
+      if (mounted) setState(() => _licenseBusy = false);
+    }
+  }
+
+  Future<void> _verifyLicense() async {
+    setState(() => _licenseBusy = true);
+    try {
+      final result = await _licenseService.verify();
+      setState(() => _licenseStatus = 'Ativa neste aparelho · ${result.devices} de ${result.maxDevices} dispositivos vinculados');
+      _snack('Licença confirmada pelo servidor.');
+    } catch (error) {
+      setState(() => _licenseStatus = 'Não confirmada: $error');
+    } finally {
+      if (mounted) setState(() => _licenseBusy = false);
+    }
+  }
+
+  Future<void> _deactivateLicense() async {
+    final confirmed = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+          title: const Text('Desvincular aparelho?'),
+          content: const Text('Isso remove este aparelho da licença no servidor e libera o espaço da lista de dispositivos.'),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Desvincular'))],
+        ));
+    if (confirmed != true) return;
+    setState(() => _licenseBusy = true);
+    try {
+      await _licenseService.deactivate();
+      setState(() { _licenseSaved = false; _licenseStatus = 'Licença não ativada neste aparelho'; });
+      _snack('Aparelho desvinculado.');
+    } catch (error) {
+      _snack('$error');
+    } finally {
+      if (mounted) setState(() => _licenseBusy = false);
+    }
+  }
+
+  Future<void> _clearSavedLicense() async {
+    final confirmed = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+          title: const Text('Remover chave salva?'),
+          content: const Text('Remove a chave deste aparelho. Se estiver sem internet ou a licença tiver sido revogada, o vínculo remoto pode precisar ser removido pelo painel ou pela extensão.'),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Remover chave'))],
+        ));
+    if (confirmed != true) return;
+    await _secureStorage.delete(key: 'kr_license_key');
+    setState(() { _licenseSaved = false; _licenseStatus = 'Licença não ativada neste aparelho'; _licenseInput.clear(); });
+  }
 
   Widget _settings() => ListView(padding: const EdgeInsets.all(18), children: [_hero('Configurações', 'KR Easy Extension · Versão Android nativa'), const SizedBox(height: 12), _card(ListTile(title: const Text('Exportar dados locais'), subtitle: const Text('Copiar backup JSON para área de transferência'), leading: const Icon(Icons.backup_outlined), onTap: _exportData)), _card(ListTile(title: const Text('Diagnóstico'), leading: const Icon(Icons.health_and_safety_outlined), onTap: _help)), _card(const ListTile(title: Text('Privacidade'), subtitle: Text('Clientes, produtos e lembretes ficam no dispositivo nesta versão.')))]);
 
@@ -341,7 +441,7 @@ class _KrHomeState extends State<KrHome> {
     await Clipboard.setData(ClipboardData(text: backup)); _snack('Backup JSON copiado. Guarde em local seguro.');
   }
 
-  void _help() => showDialog<void>(context: context, builder: (ctx) => AlertDialog(title: const Text('Ajuda e diagnóstico'), content: const Text('Dados são armazenados localmente neste aparelho. A sincronização, login, validação de licença, notificações agendadas e IA conectada ainda dependem de integração segura ao backend do KR Easy Extension.'), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Entendi'))]));
+  void _help() => showDialog<void>(context: context, builder: (ctx) => AlertDialog(title: const Text('Ajuda e diagnóstico'), content: const Text('Clientes, produtos, scripts e a chave de licença ficam protegidos pelo armazenamento seguro do Android. A licença usa a API existente. Sincronização CRM, notificações do sistema e IA conectada ainda dependem de integração adicional.'), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Entendi'))]));
 }
 
 class _CalcCard extends StatefulWidget {

@@ -9,8 +9,17 @@ O workflow `Android APK` prepara o scaffold Android com Flutter stable, instala 
 Também é possível compilar localmente com Flutter instalado:
 
 ```bash
+mkdir -p /tmp/kr-source
+cp pubspec.yaml /tmp/kr-source/pubspec.yaml
+cp -R lib test /tmp/kr-source/
 flutter create --platforms=android --org com.kenueferreira --project-name kr_easy_extension .
+cp /tmp/kr-source/pubspec.yaml pubspec.yaml
+cp -R /tmp/kr-source/lib/. lib/
+python3 -c "from pathlib import Path; Path('test/widget_test.dart').unlink(missing_ok=True)"
+cp -R /tmp/kr-source/test/. test/
+python3 tool/prepare_android.py
 flutter pub get
+dart run flutter_launcher_icons
 flutter analyze
 flutter test
 flutter build apk --debug
@@ -35,20 +44,19 @@ flutter build apk --debug
 
 ## Proteção de dados
 
-O aplicativo não inclui credenciais Firebase, chaves de IA, tokens administrativos ou certificados de assinatura. Os dados locais não estão criptografados por esta implementação inicial; não armazene dados pessoais sensíveis até acrescentarmos armazenamento protegido e sincronização autenticada. O backup é texto JSON e deve ser guardado com cuidado.
+O aplicativo não inclui credenciais Firebase, chaves de IA, tokens administrativos ou certificados de assinatura. A chave de licença e os dados comerciais locais usam `flutter_secure_storage`, protegido pelo Android Keystore; o app desativa backup automático para evitar restaurar dados criptografados sem a chave do dispositivo. O backup exportado é texto JSON e deve ser guardado com cuidado.
 
 ## Integrações ainda pendentes
 
-O app não apresenta como concluídas integrações sem um endpoint confirmado. Antes de conectar contas e dados existentes, é preciso definir API autenticada para login, sincronização CRM/catálogo, licença privada, operações administrativas e IA. A extensão web consulta Firebase por hash de licença, mas a configuração consultada não confirmou URL de banco utilizável para o APK. A licença deve ser validada no backend e o modo de testes precisa ser isolado de licenças comerciais.
+O app não apresenta como concluídas integrações sem um endpoint confirmado. A ativação de licença reaproveita `POST /api/devices` com `register`, `list` e `remove`, que valida a chave no servidor Firebase e mantém o limite existente de dois dispositivos compartilhado com a extensão. Não há autenticação de conta por e-mail; a chave comercial é o meio de ativação. Login por usuário e sincronização CRM/catálogo continuam pendentes.
 
 O painel administrativo permanece no site/backend atual. Não há operação privilegiada disponível no APK.
 
 ## Próxima sequência técnica
 
-1. Obter/configurar um ambiente Flutter e executar o workflow numa branch de desenvolvimento.
-2. Verificar configuração real do Firebase e do domínio oficial, sem copiar segredos para o cliente.
-3. Implementar autenticação e validação server-side de licença para o ambiente privado.
-4. Definir API versionada para sincronização seletiva dos dados e acesso por usuário.
-5. Proteger persistência local, adicionar anexos/fotos e notificações Android.
-6. Integrar modelo de IA somente por backend com limites e opção desativada por padrão.
-7. Validar em aparelhos Android e preparar assinatura de APK privado; manter AAB como etapa futura.
+1. Obter uma chave de avaliação pelo painel administrativo; a licença de review atual expira em 30 dias e aceita até dois dispositivos.
+2. Executar o workflow numa branch de desenvolvimento e testar ativação/desvinculação com essa chave.
+3. Definir API versionada para sincronização seletiva do CRM/catálogo.
+4. Adicionar anexos/fotos e notificações Android.
+5. Integrar modelo de IA somente por backend com limites e opção desativada por padrão.
+6. Validar em aparelhos Android e preparar assinatura de APK privado; manter AAB como etapa futura.
