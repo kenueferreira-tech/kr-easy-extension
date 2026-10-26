@@ -37,7 +37,7 @@ A licença do aplicativo agora pode ser ativada, verificada e desvinculada pela 
 - As notificações locais dependem da permissão do Android e da entrega aproximada; ainda precisam de validação em aparelhos físicos, inclusive após reinicialização e em fabricantes com economia agressiva de bateria.
 - Não há login por conta/e-mail. A licença é a forma de ativação; o aplicativo ainda não bloqueia todas as áreas comerciais quando não há licença, pois o modo de avaliação privado precisa ser alinhado com a política de distribuição.
 - Administração/revogação de chave não está exposta no app. Deve passar pelo backend existente com autenticação administrativa.
-- Fotos, importação, relatórios exportáveis em arquivo e sincronização entre dispositivos não estão implementados.
+- Fotos, importação de arquivos de backup, relatórios exportáveis em arquivo e sincronização entre dispositivos não estão implementados. A restauração disponível agora cola e mescla um backup JSON sem apagar os dados atuais.
 - APK debug compilado no GitHub Actions após adicionar a ativação de licença e armazenamento seguro (workflow `KR Easy Extension Android APK`, execução `40376159373`); análise do Flutter, testes unitários e build passaram.
 - Instalação e validação funcional em aparelho Android ainda pendentes. O ambiente local não tem Flutter/Dart/Android SDK.
 

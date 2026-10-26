@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'backup.dart';
 import 'finance.dart';
 import 'licensing.dart';
 import 'reminders.dart';
@@ -401,7 +402,14 @@ class _KrHomeState extends State<KrHome> {
     setState(() { _licenseSaved = false; _licenseStatus = 'Licença não ativada neste aparelho'; _licenseInput.clear(); });
   }
 
-  Widget _settings() => ListView(padding: const EdgeInsets.all(18), children: [_hero('Configurações', 'KR Easy Extension · Versão Android nativa'), const SizedBox(height: 12), _card(ListTile(title: const Text('Exportar dados locais'), subtitle: const Text('Copiar backup JSON para área de transferência'), leading: const Icon(Icons.backup_outlined), onTap: _exportData)), _card(ListTile(title: const Text('Diagnóstico'), leading: const Icon(Icons.health_and_safety_outlined), onTap: _help)), _card(const ListTile(title: Text('Privacidade'), subtitle: Text('Clientes, produtos e lembretes ficam no dispositivo nesta versão.')))]);
+  Widget _settings() => ListView(padding: const EdgeInsets.all(18), children: [
+        _hero('Configurações', 'KR Easy Extension · Versão Android nativa'),
+        const SizedBox(height: 12),
+        _card(ListTile(title: const Text('Exportar dados locais'), subtitle: const Text('Copiar backup JSON para a área de transferência'), leading: const Icon(Icons.backup_outlined), onTap: _exportData)),
+        _card(ListTile(title: const Text('Importar backup'), subtitle: const Text('Mesclar dados de um backup sem apagar os atuais'), leading: const Icon(Icons.restore_outlined), onTap: _importData)),
+        _card(ListTile(title: const Text('Diagnóstico'), leading: const Icon(Icons.health_and_safety_outlined), onTap: _help)),
+        _card(const ListTile(title: Text('Privacidade'), subtitle: Text('Clientes, produtos e lembretes ficam no dispositivo nesta versão.'))),
+      ]);
 
   Widget _calcCard(String title, List<String> labels, String Function(List<String>) calculate) => _CalcCard(title: title, labels: labels, calculate: calculate);
   Widget _hero(String title, String subtitle) => Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: LinearGradient(colors: [_green.withValues(alpha: .22), _panel]), borderRadius: BorderRadius.circular(22), border: Border.all(color: _green.withValues(alpha: .22))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)), const SizedBox(height: 6), Text(subtitle, style: const TextStyle(color: Colors.white70))]));
@@ -603,9 +611,100 @@ class _KrHomeState extends State<KrHome> {
   }
 
   Future<void> _exportData() async {
-    final backup = jsonEncode({'clients': _clients, 'products': _products, 'reminders': _reminders, 'scripts': _scripts, 'exportedAt': DateTime.now().toIso8601String()});
+    final backup = jsonEncode({'format': 'kr_easy_extension_backup', 'version': 1, 'clients': _clients, 'products': _products, 'reminders': _reminders, 'scripts': _scripts, 'exportedAt': DateTime.now().toIso8601String()});
     await Clipboard.setData(ClipboardData(text: backup)); _snack('Backup JSON copiado. Guarde em local seguro.');
   }
+
+  Future<void> _importData() async {
+    final input = TextEditingController();
+    String? errorText;
+    final backup = await showDialog<KrBackupData>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Importar backup'),
+          content: SizedBox(
+            width: 480,
+            child: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Cole o JSON exportado pelo KR Easy. Os dados serão mesclados: nada que já está no aparelho será apagado.'),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: input,
+                  minLines: 5,
+                  maxLines: 9,
+                  keyboardType: TextInputType.multiline,
+                  decoration: InputDecoration(labelText: 'Backup JSON', hintText: '{ ... }', errorText: errorText),
+                ),
+              ]),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                final data = await Clipboard.getData(Clipboard.kTextPlain);
+                if (data?.text == null || data!.text!.isEmpty) {
+                  setDialogState(() => errorText = 'A área de transferência está vazia.');
+                  return;
+                }
+                setDialogState(() { input.text = data.text!; errorText = null; });
+              },
+              child: const Text('Colar da área de transferência'),
+            ),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
+            FilledButton(
+              onPressed: () {
+                try {
+                  Navigator.pop(dialogContext, KrBackupData.parse(input.text));
+                } on FormatException catch (error) {
+                  setDialogState(() => errorText = error.message);
+                } catch (_) {
+                  setDialogState(() => errorText = 'Não foi possível ler o backup. Confira o conteúdo.');
+                }
+              },
+              child: const Text('Mesclar dados'),
+            ),
+          ],
+        ),
+      ),
+    );
+    input.dispose();
+    if (backup == null || !mounted) return;
+
+    final clients = KrBackupData.merge(existing: _clients, incoming: backup.clients, identity: (item) => _backupIdentity([item['name'], item['note'], item['stage']]));
+    final products = KrBackupData.merge(existing: _products, incoming: backup.products, identity: (item) => _backupIdentity([item['name']]));
+    final reminders = KrBackupData.merge(existing: _reminders, incoming: backup.reminders, identity: (item) => _backupIdentity([item['title'], item['scheduledAt'] ?? item['date']]));
+    final scripts = KrBackupData.merge(existing: _scripts, incoming: backup.scripts, identity: (item) => _backupIdentity([item['title'], item['category'], item['text']]));
+    final newReminders = reminders.skip(_reminders.length).toList();
+    final remindersWithIds = [..._reminders];
+    for (final reminder in newReminders) {
+      final scheduledAt = _reminderDateTime(reminder);
+      if (scheduledAt != null) reminder['scheduledAt'] = scheduledAt.toIso8601String();
+      reminder['notificationId'] = _nextReminderId(remindersWithIds);
+      remindersWithIds.add(reminder);
+    }
+
+    final added = clients.length - _clients.length + products.length - _products.length + reminders.length - _reminders.length + scripts.length - _scripts.length;
+    if (added == 0) { _snack('Este backup não trouxe dados novos.'); return; }
+    setState(() {
+      _clients = clients;
+      _products = products;
+      _reminders = reminders;
+      _scripts
+        ..clear()
+        ..addAll(scripts);
+    });
+    await _save();
+    if (_reminderNotificationsEnabled) {
+      for (final reminder in newReminders) {
+        try { await _scheduleReminder(reminder); }
+        catch (_) { /* Os dados ficam importados mesmo se um aviso não puder ser agendado. */ }
+      }
+    }
+    _snack('$added registro${added == 1 ? '' : 's'} importado${added == 1 ? '' : 's'} sem apagar os dados atuais.');
+  }
+
+  String _backupIdentity(List<Object?> values) => values.map((value) => '${value ?? ''}'.trim().toLowerCase()).join('|');
 
   void _help() => showDialog<void>(context: context, builder: (ctx) => AlertDialog(title: const Text('Ajuda e diagnóstico'), content: const Text('Clientes, produtos, scripts, lembretes e a chave de licença ficam protegidos pelo armazenamento seguro do Android. Notificações locais podem ser ativadas em Mais > Lembretes; o Android pode entregá-las com algum atraso. A licença usa a API existente. Sincronização CRM e IA conectada ainda dependem de integração adicional.'), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Entendi'))]));
 }

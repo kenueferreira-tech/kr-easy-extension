@@ -42,7 +42,7 @@ flutter build apk --debug
 - KR Performance com métricas calculadas dos dados registrados no app.
 - Lembretes com seleção de data e horário, conclusão e notificações locais opcionais. A permissão é solicitada somente quando a pessoa ativa notificações; os avisos usam alarmes aproximados e podem atrasar conforme as políticas de bateria do Android.
 - Abertura manual de conversa pelo link oficial `wa.me` e cópia de scripts.
-- Exportação de backup JSON para a área de transferência.
+- Exportação de backup JSON para a área de transferência e restauração por colagem, mesclando registros sem apagar dados existentes. A importação valida o formato e não inclui nem restaura chaves de licença.
 - Dados comerciais persistidos no armazenamento seguro Android Keystore; dados antigos em `shared_preferences` são migrados ao abrir esta versão.
 - Ícone oficial do KR Easy Extension nas dimensões launcher do Android.
 
