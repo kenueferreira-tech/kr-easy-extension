@@ -70,7 +70,10 @@
       const $ = (selector, context = document) => context.querySelector(selector);
       const $$ = (selector, context = document) => [...context.querySelectorAll(selector)];
       const normalizeKey = value => value.trim().toUpperCase().replace(/\s+/g, '');
-      const IS_PLAY_APP = new URLSearchParams(location.search).get('source') === 'play';
+      const PLAY_APP_SOURCE = new URLSearchParams(location.search).get('source') === 'play';
+      const ANDROID_STANDALONE = /Android/i.test(navigator.userAgent) &&
+        window.matchMedia('(display-mode: standalone)').matches;
+      const IS_PLAY_APP = PLAY_APP_SOURCE || ANDROID_STANDALONE;
       const escapeHtml = value => String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
       let toastTimer;
       let installPrompt = null;
