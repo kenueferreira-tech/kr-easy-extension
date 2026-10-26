@@ -2,6 +2,10 @@
 
 Este diretório contém a primeira base Flutter do aplicativo Android. É uma aplicação Flutter com telas e código próprios; não incorpora `mobile.html`, WebView ou Trusted Web Activity.
 
+## Build de teste
+
+O workflow de APK usa o canal Flutter stable e gera uma compilação **debug** para distribuição privada. A dependência de notificações atual requer Flutter 3.38.1 ou superior, Android compile SDK 35 ou superior e Java 17; o scaffold configura compile SDK 36. O workflow executa `flutter analyze`, testes unitários e build do APK antes de publicar o artefato.
+
 ## Compilar APK de teste
 
 O workflow `Android APK` prepara o scaffold Android com Flutter stable, instala dependências, executa análise estática e testes, e publica um APK **debug** como artefato do GitHub Actions. O APK debug serve para instalação privada de testes. Ainda não usa uma chave de assinatura de distribuição.
@@ -36,15 +40,17 @@ flutter build apk --debug
 - KR Radar priorizado a partir da etapa e data dos registros locais.
 - KR Academy com simulação e critérios locais de avaliação.
 - KR Performance com métricas calculadas dos dados registrados no app.
-- Lembretes com seleção de data e marcação de conclusão. Nesta base, ficam como tarefas dentro do app; notificação do sistema ainda não está integrada.
+- Lembretes com seleção de data e horário, conclusão e notificações locais opcionais. A permissão é solicitada somente quando a pessoa ativa notificações; os avisos usam alarmes aproximados e podem atrasar conforme as políticas de bateria do Android.
 - Abertura manual de conversa pelo link oficial `wa.me` e cópia de scripts.
 - Exportação de backup JSON para a área de transferência.
-- Dados comerciais persistidos localmente via `shared_preferences`.
+- Dados comerciais persistidos no armazenamento seguro Android Keystore; dados antigos em `shared_preferences` são migrados ao abrir esta versão.
 - Ícone oficial do KR Easy Extension nas dimensões launcher do Android.
 
 ## Proteção de dados
 
 O aplicativo não inclui credenciais Firebase, chaves de IA, tokens administrativos ou certificados de assinatura. A chave de licença e os dados comerciais locais usam `flutter_secure_storage`, protegido pelo Android Keystore; o app desativa backup automático para evitar restaurar dados criptografados sem a chave do dispositivo. O backup exportado é texto JSON e deve ser guardado com cuidado.
+
+O usuário pode desligar as notificações em `Mais > Lembretes`; isso cancela os avisos agendados sem apagar os lembretes salvos. Os avisos não usam alarmes exatos nem solicitam a permissão especial de alarmes exatos.
 
 ## Integrações ainda pendentes
 

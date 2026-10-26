@@ -26,7 +26,7 @@ Data da inspeção: 26/10/2026. Fonte inspecionada: branch padrão `main` do rep
 
 ## Implementado no app Flutter inicial
 
-Dashboard, assistente local por scripts, central de scripts com favoritos/pesquisa/criação, cadastro local de clientes e etapas, catálogo, calculadoras, Radar baseado em dados locais, simulação Academy, indicadores Performance, lembretes internos, cópia/backup local e navegação Android nativa. Chave de licença e dados comerciais persistem criptografados via Android Keystore; dados legados em SharedPreferences migram para o armazenamento seguro ao abrir a atualização. O backup automático Android está desativado para evitar restauração sem a chave do aparelho.
+Dashboard, assistente local por scripts, central de scripts com favoritos/pesquisa/criação, cadastro local de clientes e etapas, catálogo, calculadoras, Radar baseado em dados locais, simulação Academy, indicadores Performance, lembretes com data e horário, notificações locais opcionais, cópia/backup local e navegação Android nativa. Chave de licença e dados comerciais persistem criptografados via Android Keystore; dados legados em SharedPreferences migram para o armazenamento seguro ao abrir a atualização. O backup automático Android está desativado para evitar restauração sem a chave do aparelho. Notificações usam alarmes aproximados; o sistema pode atrasá-las por economia de bateria.
 
 A licença do aplicativo agora pode ser ativada, verificada e desvinculada pela API existente `/api/devices`. A ativação acontece somente após ação explícita da pessoa; ela ocupa um dos dois espaços compartilhados com a extensão Chrome. Não houve chamada de ativação durante o desenvolvimento.
 
@@ -34,7 +34,7 @@ A licença do aplicativo agora pode ser ativada, verificada e desvinculada pela 
 
 - O assistente é determinístico e local; não é IA conectada.
 - CRM e catálogo são somente locais; não sincronizam com site, extensão ou banco remoto.
-- Lembretes não agendam notificação do Android.
+- As notificações locais dependem da permissão do Android e da entrega aproximada; ainda precisam de validação em aparelhos físicos, inclusive após reinicialização e em fabricantes com economia agressiva de bateria.
 - Não há login por conta/e-mail. A licença é a forma de ativação; o aplicativo ainda não bloqueia todas as áreas comerciais quando não há licença, pois o modo de avaliação privado precisa ser alinhado com a política de distribuição.
 - Administração/revogação de chave não está exposta no app. Deve passar pelo backend existente com autenticação administrativa.
 - Fotos, importação, relatórios exportáveis em arquivo e sincronização entre dispositivos não estão implementados.
@@ -43,7 +43,7 @@ A licença do aplicativo agora pode ser ativada, verificada e desvinculada pela 
 
 ## Planejados
 
-Teste privado por APK, geração da licença `review` (30 dias) já suportada pelo painel administrativo, definição de bloqueio por licença, sincronização gradual, notificação local, IA opcional via servidor e empacotamento futuro assinado para publicação comercial, sujeito a autorização específica.
+Teste privado por APK, geração da licença `review` (30 dias) já suportada pelo painel administrativo, definição de bloqueio por licença, sincronização gradual, IA opcional via servidor e empacotamento futuro assinado para publicação comercial, sujeito a autorização específica.
 
 ## Segurança / produção
 
