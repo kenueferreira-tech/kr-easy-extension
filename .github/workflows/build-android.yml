@@ -3,7 +3,7 @@ name: Build Android AAB
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/google-play-purchase]
+    branches: [main, feature/google-play-purchase, codex/play-billing-api24-code8]
     paths:
       - "android-app-source.zip"
       - "android-app/twa-manifest.json"
@@ -48,7 +48,7 @@ jobs:
         working-directory: android-app
         run: npx --yes @bubblewrap/cli update --appVersionName=1.2.0
 
-      - name: Pin Android Browser Helper for Android 6 compatibility
+      - name: Pin Android Browser Helper 2.7.3 for stable Billing support
         working-directory: android-app
         run: |
           sed -i "s/androidbrowserhelper:2.7.4/androidbrowserhelper:2.7.3/g" app/build.gradle
@@ -76,7 +76,7 @@ jobs:
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: KR-Easy-Extension-v1.2.0-code7-AAB
+          name: KR-Easy-Extension-v1.2.0-code8-AAB
           path: android-app/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
