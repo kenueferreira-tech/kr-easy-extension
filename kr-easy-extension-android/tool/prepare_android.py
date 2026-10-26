@@ -32,10 +32,10 @@ manifest.write_text(manifest_content, encoding='utf-8')
 gradle_content = gradle.read_text(encoding='utf-8')
 gradle_content = gradle_content.replace('minSdk = flutter.minSdkVersion', 'minSdk = 23')
 gradle_content = gradle_content.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 36')
-if 'applicationIdSuffix = ".test"' not in gradle_content:
+if 'applicationIdSuffix = ".test2"' not in gradle_content:
     gradle_content = gradle_content.replace(
         '    buildTypes {',
-        '    buildTypes {\n        getByName("debug") { applicationIdSuffix = ".test" }',
+        '    buildTypes {\n        getByName("debug") { applicationIdSuffix = ".test2" }',
         1,
     )
 if 'isCoreLibraryDesugaringEnabled = true' not in gradle_content:
@@ -51,6 +51,13 @@ if 'coreLibraryDesugaring(' not in gradle_content:
     else:
         gradle_content += f'\ndependencies {{\n{dependency}}}\n'
 gradle.write_text(gradle_content, encoding='utf-8')
+
+debug_manifest = Path('android/app/src/debug/AndroidManifest.xml')
+debug_manifest.parent.mkdir(parents=True, exist_ok=True)
+debug_manifest.write_text('''<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:label="KR Easy Extension (Teste 2)" />
+</manifest>
+''', encoding='utf-8')
 
 notification_icon = Path('android/app/src/main/res/drawable/kr_notification.xml')
 notification_icon.parent.mkdir(parents=True, exist_ok=True)
