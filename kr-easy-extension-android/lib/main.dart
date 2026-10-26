@@ -438,9 +438,9 @@ class _KrHomeState extends State<KrHome> {
 
   Future<void> _addReminder(String title) async {
     final date = await showDatePicker(context: context, initialDate: DateTime.now().add(const Duration(days: 1)), firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365 * 3)));
-    if (date == null) return;
+    if (date == null || !mounted) return;
     final time = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 9, minute: 0));
-    if (time == null) return;
+    if (time == null || !mounted) return;
     final scheduledAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
     if (!scheduledAt.isAfter(DateTime.now())) { _snack('Escolha um horário futuro.'); return; }
     final reminder = <String, dynamic>{
