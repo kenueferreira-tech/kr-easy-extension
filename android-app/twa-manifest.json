@@ -21,7 +21,7 @@
     "alias": "kr-easy-upload"
   },
   "appVersionName": "1.2.0",
-  "appVersionCode": 6,
+  "appVersionCode": 7,
   "shortcuts": [
     {
       "name": "Scripts rápidos",
@@ -61,7 +61,7 @@
   "isChromeOSOnly": false,
   "isMetaQuest": false,
   "fullScopeUrl": "https://kr-easy-extension.vercel.app/",
-  "minSdkVersion": 23,
+  "minSdkVersion": 24,
   "orientation": "portrait",
   "fingerprints": [],
   "additionalTrustedOrigins": [],
