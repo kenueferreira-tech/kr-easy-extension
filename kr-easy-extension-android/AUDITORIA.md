@@ -20,6 +20,7 @@ Data da inspeção: 26/10/2026. Fonte inspecionada: branch padrão `main` do rep
 ## Recursos reaproveitados nesta base
 
 - Nome oficial, paleta escura e verde, conceito comercial e funções de scripts.
+- Ícone oficial KR Easy Extension aplicado ao launcher Android.
 - Estrutura comercial alinhada com licença do mesmo produto, sem criar um projeto Firebase novo.
 - Link manual `wa.me`; não executa automação de WhatsApp nem lê conversas.
 
@@ -35,7 +36,8 @@ Dashboard, assistente local por scripts, central de scripts com favoritos/pesqui
 - Login, identificação de usuário e validação de licença não foram implementados no cliente sem backend autenticado/configuração confirmada.
 - Administração/revogação de chave não está exposta no app. Deve passar pelo backend existente com autenticação administrativa.
 - Fotos, importação, relatórios exportáveis em arquivo e sincronização entre dispositivos não estão implementados.
-- APK ainda não foi compilado neste ambiente: não há Flutter/Dart/Android SDK instalado. O workflow foi preparado para gerar APK debug e artefato quando executado em runner GitHub.
+- APK debug compilado no GitHub Actions (workflow `KR Easy Extension Android APK`, execução `40373546221`); análise do Flutter e testes unitários passaram.
+- Instalação e validação funcional em aparelho Android ainda pendentes. O ambiente local não tem Flutter/Dart/Android SDK.
 
 ## Planejados
 
@@ -43,4 +45,4 @@ Teste privado por APK, backend seguro para acesso de teste, login e licenças, s
 
 ## Segurança / produção
 
-Nenhuma escrita foi feita no site, Firebase, produção, checkout, licenças, branches ou configurações remotas durante esta auditoria. Nenhum segredo foi copiado para a base Flutter. Para a próxima fase, trabalhar em branch isolada e testar contra ambiente separado.
+Nenhuma alteração foi feita no site, Firebase, produção, checkout ou licenças. O código deste app foi enviado à branch isolada `codex/android-native-flutter`; nenhum segredo foi copiado para a base Flutter. Para a próxima fase, continuar em branch isolada e testar contra ambiente separado.
