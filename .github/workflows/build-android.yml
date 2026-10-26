@@ -48,6 +48,12 @@ jobs:
         working-directory: android-app
         run: npx --yes @bubblewrap/cli update --appVersionName=1.2.0
 
+      - name: Pin Android Browser Helper for Android 6 compatibility
+        working-directory: android-app
+        run: |
+          sed -i "s/androidbrowserhelper:2.7.4/androidbrowserhelper:2.7.3/g" app/build.gradle
+          grep -q "androidbrowserhelper:2.7.3" app/build.gradle
+
       - name: Restore signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -70,7 +76,7 @@ jobs:
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: KR-Easy-Extension-v1.2.0-AAB
+          name: KR-Easy-Extension-v1.2.0-code7-AAB
           path: android-app/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 30
