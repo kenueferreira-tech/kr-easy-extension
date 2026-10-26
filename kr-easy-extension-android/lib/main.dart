@@ -221,10 +221,12 @@ class _KrHomeState extends State<KrHome> {
   ]);
 
   Widget _morePage() {
-    if (_tool == 'Ferramentas') return ListView(padding: const EdgeInsets.all(18), children: [
-      _hero('Ferramentas comerciais', 'Áreas complementares para organizar sua rotina de vendas.'), const SizedBox(height: 12),
-      ...['Catálogo', 'Calculadoras', 'KR Radar', 'KR Academy', 'KR Performance', 'Lembretes', 'Integrações', 'Licença e acesso', 'Configurações'].map((name) => _card(ListTile(title: Text(name), trailing: const Icon(Icons.chevron_right), onTap: () => _openTool(name)))),
-    ]);
+    if (_tool == 'Ferramentas') {
+      return ListView(padding: const EdgeInsets.all(18), children: [
+        _hero('Ferramentas comerciais', 'Áreas complementares para organizar sua rotina de vendas.'), const SizedBox(height: 12),
+        ...['Catálogo', 'Calculadoras', 'KR Radar', 'KR Academy', 'KR Performance', 'Lembretes', 'Integrações', 'Licença e acesso', 'Configurações'].map((name) => _card(ListTile(title: Text(name), trailing: const Icon(Icons.chevron_right), onTap: () => _openTool(name)))),
+      ]);
+    }
     switch (_tool) {
       case 'Catálogo': return _catalog();
       case 'Calculadoras': return _calculators();
