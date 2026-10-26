@@ -54,8 +54,8 @@ gradle.write_text(gradle_content, encoding='utf-8')
 
 debug_manifest = Path('android/app/src/debug/AndroidManifest.xml')
 debug_manifest.parent.mkdir(parents=True, exist_ok=True)
-debug_manifest.write_text('''<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application android:label="KR Easy Extension (Teste 2)" />
+debug_manifest.write_text('''<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <application android:label="KR Easy Extension (Teste 2)" tools:replace="android:label" />
 </manifest>
 ''', encoding='utf-8')
 
