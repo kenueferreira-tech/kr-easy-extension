@@ -7,11 +7,9 @@
       "namespace": "android_app",
       "package_name": "com.kenueferreira.kreasyextension",
       "sha256_cert_fingerprints": [
-        "4D:7D:C4:6B:76:83:BE:1E:BE:F9:32:C2:A9:D5:EA:C7:CB:DE:2A:71:58:97:47:D6:F2:10:30:6C:DF:69:C1:D5"
+        "4D:7D:C4:6B:76:83:BE:1E:BE:F9:32:C2:A9:D5:EA:C7:CB:DE:2A:71:58:97:47:D6:F2:10:30:6C:DF:69:C1:D5",
+        "E1:DF:DF:F3:E8:59:ED:9B:24:07:18:27:06:22:4C:C9:FB:0B:8B:7B:2A:BE:65:F0:96:A9:64:14:2D:4C:02:B3"
       ]
-    },
-    "sha256_cert_fingerprints": [
-      "E1:DF:DF:F3:E8:59:ED:9B:24:07:18:27:06:22:4C:C9:FB:0B:8B:7B:2A:BE:65:F0:96:A9:64:14:2D:4C:02:B3"
-    ]
+    }
   }
 ]
