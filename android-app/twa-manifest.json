@@ -20,28 +20,48 @@
     "path": "./kr-easy-upload.keystore",
     "alias": "kr-easy-upload"
   },
-  "appVersionName": "1.1.0",
-  "appVersionCode": 2,
+  "appVersionName": "1.2.0",
+  "appVersionCode": 3,
   "shortcuts": [
-    { "name": "Scripts rápidos", "short_name": "Scripts", "url": "https://kr-easy-extension.vercel.app/mobile.html?source=play&screen=scripts", "icon": "shortcut_scripts" },
-    { "name": "Gerar mensagem", "short_name": "Gerador", "url": "https://kr-easy-extension.vercel.app/mobile.html?source=play&screen=generator", "icon": "shortcut_generator" }
+    {
+      "name": "Scripts rápidos",
+      "shortName": "Scripts",
+      "url": "https://kr-easy-extension.vercel.app/mobile.html?source=play&screen=scripts",
+      "chosenIconUrl": "https://kr-easy-extension.vercel.app/icons/icon-192.png"
+    },
+    {
+      "name": "Gerar mensagem",
+      "shortName": "Gerador",
+      "url": "https://kr-easy-extension.vercel.app/mobile.html?source=play&screen=generator",
+      "chosenIconUrl": "https://kr-easy-extension.vercel.app/icons/icon-192.png"
+    }
   ],
   "shareTarget": {
     "action": "https://kr-easy-extension.vercel.app/compartilhar.html",
     "method": "GET",
     "enctype": "application/x-www-form-urlencoded",
-    "params": { "title": "title", "text": "text", "url": "url" }
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
   },
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://kr-easy-extension.vercel.app/manifest.webmanifest",
   "fallbackType": "customtabs",
-  "features": {},
-  "alphaDependencies": { "enabled": false },
+  "features": {
+    "playBilling": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
   "fullScopeUrl": "https://kr-easy-extension.vercel.app/",
-  "minSdkVersion": 21,
+  "minSdkVersion": 24,
   "orientation": "portrait",
   "fingerprints": [],
   "additionalTrustedOrigins": [],
@@ -50,5 +70,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "1.1.0"
+  "appVersion": "1.2.0"
 }
