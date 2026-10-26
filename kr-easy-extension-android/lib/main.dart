@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,6 +29,9 @@ class KrEasyApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
         title: 'KR Easy Extension',
         debugShowCheckedModeBanner: false,
+        locale: const Locale('pt', 'BR'),
+        supportedLocales: const [Locale('pt', 'BR')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
         theme: ThemeData(
           brightness: Brightness.dark,
           scaffoldBackgroundColor: _bg,
@@ -305,7 +309,7 @@ class _KrHomeState extends State<KrHome> {
   }
 
   Widget _remindersPage() => ListView(padding: const EdgeInsets.all(18), children: [
-    _hero('Lembretes', 'Agende um retorno e receba um aviso local no horário escolhido.'),
+    _hero('Lembretes', 'Escolha primeiro o dia e depois o horário. Ative as notificações para receber o aviso.'),
     const SizedBox(height: 12),
     _card(SwitchListTile(
       contentPadding: EdgeInsets.zero,
@@ -437,9 +441,10 @@ class _KrHomeState extends State<KrHome> {
   }
 
   Future<void> _addReminder(String title) async {
-    final date = await showDatePicker(context: context, initialDate: DateTime.now().add(const Duration(days: 1)), firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365 * 3)));
+    final now = DateTime.now();
+    final date = await showDatePicker(context: context, initialDate: now, firstDate: DateTime(now.year, now.month, now.day), lastDate: DateTime.now().add(const Duration(days: 365 * 3)), helpText: 'Escolha o dia do retorno');
     if (date == null || !mounted) return;
-    final time = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 9, minute: 0));
+    final time = await showTimePicker(context: context, initialTime: _defaultReminderTime(date));
     if (time == null || !mounted) return;
     final scheduledAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
     if (!scheduledAt.isAfter(DateTime.now())) { _snack('Escolha um horário futuro.'); return; }
@@ -457,6 +462,16 @@ class _KrHomeState extends State<KrHome> {
       catch (error) { _snack('Lembrete salvo, mas não foi possível agendar o aviso: $error'); return; }
     }
     _snack(_reminderNotificationsEnabled ? 'Retorno agendado com notificação.' : 'Retorno salvo no aplicativo.');
+  }
+
+  TimeOfDay _defaultReminderTime(DateTime date) {
+    final now = DateTime.now();
+    if (date.year != now.year || date.month != now.month || date.day != now.day) {
+      return const TimeOfDay(hour: 9, minute: 0);
+    }
+    final roundedMinutes = (now.hour * 60 + now.minute) ~/ 5 * 5 + 5;
+    final minutes = roundedMinutes >= 24 * 60 ? 23 * 60 + 59 : roundedMinutes;
+    return TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
   }
 
   int _nextReminderId(List<Map<String, dynamic>> reminders) {
