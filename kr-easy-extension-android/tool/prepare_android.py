@@ -32,6 +32,12 @@ manifest.write_text(manifest_content, encoding='utf-8')
 gradle_content = gradle.read_text(encoding='utf-8')
 gradle_content = gradle_content.replace('minSdk = flutter.minSdkVersion', 'minSdk = 23')
 gradle_content = gradle_content.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 36')
+if 'applicationIdSuffix = ".test"' not in gradle_content:
+    gradle_content = gradle_content.replace(
+        '    buildTypes {',
+        '    buildTypes {\n        getByName("debug") { applicationIdSuffix = ".test" }',
+        1,
+    )
 if 'isCoreLibraryDesugaringEnabled = true' not in gradle_content:
     gradle_content = gradle_content.replace(
         'compileOptions {',
