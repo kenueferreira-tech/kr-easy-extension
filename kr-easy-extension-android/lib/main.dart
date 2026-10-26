@@ -155,10 +155,57 @@ class _KrHomeState extends State<KrHome> {
 
   Widget _scriptsPage() {
     final categories = ['Todos', ...{..._scripts.map((s) => s['category'] as String)}];
-    final visible = _scripts.where((s) => (_category == 'Todos' || s['category'] == _category) && ('${s['title']} ${s['text']}'.toLowerCase().contains(_search.text.toLowerCase()))).toList();
-    return Column(children: [Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 0), child: TextField(controller: _search, onChanged: (_) => setState(() {}), decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Pesquisar scripts')),
-      SizedBox(height: 54, child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 12), children: categories.map((c) => Padding(padding: const EdgeInsets.all(4), child: ChoiceChip(label: Text(c), selected: c == _category, onSelected: (_) => setState(() => _category = c))).toList())),
-      Expanded(child: visible.isEmpty ? _empty('Nenhum script encontrado.') : ListView(padding: const EdgeInsets.all(16), children: visible.map((s) => _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Expanded(child: Text('${s['title']}', style: const TextStyle(fontWeight: FontWeight.bold))), IconButton(onPressed: () { setState(() => s['favorite'] = !(s['favorite'] == true)); _save(); }, icon: Icon(s['favorite'] == true ? Icons.star : Icons.star_border, color: _green))]), Text('${s['category']}', style: const TextStyle(color: _green, fontSize: 12)), const SizedBox(height: 8), Text('${s['text']}'), Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: () { Clipboard.setData(ClipboardData(text: '${s['text']}')); _snack('Script copiado.'); }, icon: const Icon(Icons.copy), label: const Text('Copiar')))]))).toList())),
+    final visible = _scripts.where((s) {
+      final matchesCategory = _category == 'Todos' || s['category'] == _category;
+      final matchesSearch = '${s['title']} ${s['text']}'.toLowerCase().contains(_search.text.toLowerCase());
+      return matchesCategory && matchesSearch;
+    }).toList();
+    return Column(children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: TextField(controller: _search, onChanged: (_) => setState(() {}), decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Pesquisar scripts')),
+      ),
+      SizedBox(
+        height: 54,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          children: categories.map((c) => Padding(
+                padding: const EdgeInsets.all(4),
+                child: ChoiceChip(label: Text(c), selected: c == _category, onSelected: (_) => setState(() => _category = c)),
+              )).toList(),
+        ),
+      ),
+      Expanded(
+        child: visible.isEmpty
+            ? _empty('Nenhum script encontrado.')
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: visible.map((s) => _card(Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Expanded(child: Text('${s['title']}', style: const TextStyle(fontWeight: FontWeight.bold))),
+                          IconButton(
+                            onPressed: () { setState(() => s['favorite'] = !(s['favorite'] == true)); _save(); },
+                            icon: Icon(s['favorite'] == true ? Icons.star : Icons.star_border, color: _green),
+                          ),
+                        ]),
+                        Text('${s['category']}', style: const TextStyle(color: _green, fontSize: 12)),
+                        const SizedBox(height: 8),
+                        Text('${s['text']}'),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed: () { Clipboard.setData(ClipboardData(text: '${s['text']}')); _snack('Script copiado.'); },
+                            icon: const Icon(Icons.copy),
+                            label: const Text('Copiar'),
+                          ),
+                        ),
+                      ],
+                    ))).toList(),
+              ),
+      ),
     ]);
   }
 
@@ -234,7 +281,18 @@ class _KrHomeState extends State<KrHome> {
   Widget _quick(String label, IconData icon, VoidCallback onTap) => _card(InkWell(onTap: onTap, borderRadius: BorderRadius.circular(18), child: Row(children: [Icon(icon, color: _green), const SizedBox(width: 10), Flexible(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)))])));
   Widget _card(Widget child) => Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: _panel, borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.white.withValues(alpha: .05))), child: child);
   Widget _empty(String message) => Center(child: Padding(padding: const EdgeInsets.all(26), child: Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60))));
-  Widget _reminderTile(Map<String, dynamic> r) => _card(ListTile(contentPadding: EdgeInsets.zero, leading: Icon(r['done'] == true ? Icons.check_circle : Icons.alarm, color: _green), title: Text('${r['title']}'), subtitle: Text('${r['date']}'), trailing: IconButton(onPressed: () { setState(() => r['done'] = !(r['done'] == true)); _save(); }, icon: Icon(r['done'] == true ? Icons.undo : Icons.check)))));
+  Widget _reminderTile(Map<String, dynamic> r) => _card(
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(r['done'] == true ? Icons.check_circle : Icons.alarm, color: _green),
+          title: Text('${r['title']}'),
+          subtitle: Text('${r['date']}'),
+          trailing: IconButton(
+            onPressed: () { setState(() => r['done'] = !(r['done'] == true)); _save(); },
+            icon: Icon(r['done'] == true ? Icons.undo : Icons.check),
+          ),
+        ),
+      );
 
   void _openTool(String name) => setState(() { _tab = 4; _tool = name; });
   void _snack(String message) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
